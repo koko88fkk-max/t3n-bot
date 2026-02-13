@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>T3N Hosting | العرض الترويجي</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #0d0d0d;
+            color: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .container {
+            text-align: center;
+            z-index: 10;
+        }
+
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: #00ff88;
+            text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+        }
+
+        p {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            color: #cccccc;
+        }
+
+        .btn {
+            background-color: #00ff88;
+            color: #000;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: transform 0.2s, box-shadow 0.2s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.6);
+        }
+
+        #video-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: black;
+            display: none;
+            z-index: 9999;
+        }
+
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container" id="welcome-screen">
+        <h1>T3N Hosting</h1>
+        <p>مرحباً بك في صفحة العرض الخاص.</p>
+        <p>يرجى النقر أدناه للمتابعة والتحقق من الشروط.</p>
+        <button class="btn" onclick="startShow()">اضغط هنا للمتابعة</button>
+    </div>
+
+    <div id="video-container">
+        <!-- 'playsinline' helps on mobile -->
+        <video id="scare-video" src="promo.mp4" playsinline></video>
+    </div>
+
+    <script>
+        function startShow() {
+            var welcomeScreen = document.getElementById('welcome-screen');
+            var videoContainer = document.getElementById('video-container');
+            var video = document.getElementById('scare-video');
+
+            // Hide the welcome screen
+            welcomeScreen.style.display = 'none';
+
+            // Show the video container
+            videoContainer.style.display = 'block';
+
+            // Request full screen
+            var elem = document.documentElement;
+            if (elem.requestFullscreen) {
+                elem.requestFullscreen();
+            } else if (elem.webkitRequestFullscreen) { /* Safari */
+                elem.webkitRequestFullscreen();
+            } else if (elem.msRequestFullscreen) { /* IE11 */
+                elem.msRequestFullscreen();
+            }
+
+            // Play the video sound immediately at max volume
+            video.volume = 1.0;
+            video.play().catch(error => {
+                console.log("Autoplay prevented:", error);
+                // Fallback: If autoplay is blocked, we might need another click, 
+                // but usually a click on the button is enough permission.
+            });
+
+            // Optional: Loop video or just stop at the end
+            video.onended = function () {
+                // video.play(); // Loop if you want
+                // Or maybe show a scary face image afterwards
+            };
+        }
+    </script>
+</body>
+
+</html>
