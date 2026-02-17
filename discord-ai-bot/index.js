@@ -5,7 +5,7 @@ const fs = require('fs');
 const path = require('path');
 try { process.env.FFMPEG_PATH = require('ffmpeg-static'); } catch (e) { console.warn("ffmpeg-static not found"); }
 const googleTTS = require('google-tts-api');
-const { generateCertificate } = require('./generateCertificate');
+// const { generateCertificate } = require('./generateCertificate'); // Commented out to fix Render Build (Voice Priority)
 const app = express();
 const port = process.env.PORT || 3000;
 
