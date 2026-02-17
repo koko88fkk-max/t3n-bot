@@ -3,9 +3,8 @@ const OpenAI = require("openai");
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
-try { process.env.FFMPEG_PATH = require('ffmpeg-static'); } catch (e) { console.warn("ffmpeg-static not found"); }
 const googleTTS = require('google-tts-api');
-// const { generateCertificate } = require('./generateCertificate'); // Commented out to fix Render Build (Voice Priority)
+const { generateCertificate } = require('./generateCertificate');
 const app = express();
 const port = process.env.PORT || 3000;
 
@@ -223,14 +222,10 @@ const client = new Client({
         GatewayIntentBits.GuildMessages,
         GatewayIntentBits.MessageContent,
         GatewayIntentBits.DirectMessages,
-        GatewayIntentBits.GuildMembers,
-        GatewayIntentBits.GuildVoiceStates // Required for voice
+        GatewayIntentBits.GuildMembers
     ],
     partials: [Partials.Channel]
 });
-
-const VoiceHandler = require('./voiceHandler');
-const botVoice = new VoiceHandler(client, OPENROUTER_API_KEY);
 
 // --- AI SETUP (OPENROUTER) ---
 const openai = new OpenAI({
@@ -575,15 +570,7 @@ client.once('ready', async () => {
 // === MAIN MESSAGE HANDLER ===
 // =============================================
 client.on('messageCreate', async (message) => {
-    // --- DEBUG: Log every message to console to check readability ---
-    console.log(`📩 Received: "${message.content}" from ${message.author.tag} in ${message.channelId} `);
-
-    // If in the target voice channel text chat, reply to confirm visibility
-    if (message.channelId === "1473116208206188797" && !message.author.bot) {
-        console.log("✅ Message is from the target voice channel!");
-        // message.reply("👀 أنا شايفك! (تجربة)"); // Optional: Uncomment to test reply
-    }
-
+    // Ignore bot messages
     if (message.author.bot) return;
 
     // --- GLOBAL PAUSE CHECK ---
@@ -642,36 +629,7 @@ client.on('messageCreate', async (message) => {
     // --- COMPATIBILITY CALCULATOR COMMAND (Feature #230) ---
     const msgLower = message.content.toLowerCase().trim();
 
-    // --- VOICE CALL COMMAND (Feature #428) ---
-    if (msgLower === '!اتصال' || msgLower === '!تحدث' || msgLower === '!voice' || msgLower === '!call') {
-        const targetChannelId = "1473116208206188797"; // Requested Channel
 
-        // Check if user is in the target channel
-        if (message.member?.voice?.channelId !== targetChannelId) {
-            console.log(`Debug: User in ${message.member?.voice?.channelId}, Expected ${targetChannelId} `);
-            return message.reply(`❌ ** عذراً! ** الخدمة الصوتية حصرية في هذا الروم فقط: \n < #${targetChannelId}>\n(تأكد انك داخل الروم وانسخه صح!).\nID: ${targetChannelId} `);
-        }
-
-        try {
-            await message.reply("📞 جاري الاتصال... دقيقة بجهز الاغراض 🎙️");
-            const channel = await message.guild.channels.fetch(targetChannelId).catch(() => null);
-
-            if (!channel) {
-                return message.reply("❌ البوت مو قادر يشوف الروم! تأكد من الصلاحيات (View Channel).");
-            }
-
-            if (!channel.joinable) {
-                return message.reply("❌ ما عندي صلاحية أدخل (Connect) لهذا الروم!");
-            }
-
-            await botVoice.joinChannel(channel);
-            // If we reach here, success!
-        } catch (error) {
-            console.error('Voice Error:', error);
-            await message.reply(`❌ واجهت مشكلة تقنية: ${error.message} `);
-        }
-        return;
-    }
 
     if (msgLower === '!توافق' || msgLower === '!فحص' || msgLower === '!منتج' || msgLower === '!check') {
         const calcEmbed = new EmbedBuilder()
@@ -950,11 +908,7 @@ client.on('messageCreate', async (message) => {
             text = text.replace("###SEND_VOICE###", "").trim();
         }
 
-        // --- VOICE REPLY (Feature #428: Speak if in same VC) ---
-        if (message.guild && message.member?.voice?.channelId && message.guild.members.me?.voice?.channelId === message.member.voice.channelId) {
-            const cleanVoiceText = text.replace(/[*_#]/g, "").replace(/<[^>]*>/g, "").replace(/https?:\/\/\S+/g, "رابط").substring(0, 200);
-            botVoice.speak(message.guild.id, cleanVoiceText).catch(err => console.error('TTS Error:', err));
-        }
+
 
         // --- HANDLE ADMIN ALERT ---
         if (text.includes("###ADMIN_ALERT###")) {
