@@ -810,7 +810,7 @@ client.on('messageCreate', async (message) => {
         let text = "";
         try {
             const completion = await openai.chat.completions.create({
-                model: "google/gemini-2.0-flash-lite-001",
+                model: "google/gemini-2.0-flash-001",
                 messages: aiMessages,
             });
             text = completion.choices[0].message.content;
@@ -821,7 +821,7 @@ client.on('messageCreate', async (message) => {
                 await new Promise(resolve => setTimeout(resolve, 4000));
 
                 const completionRetry = await openai.chat.completions.create({
-                    model: "google/gemini-2.0-flash-lite-001",
+                    model: "google/gemini-2.0-flash-001",
                     messages: aiMessages,
                 });
                 text = completionRetry.choices[0].message.content;
