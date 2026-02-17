@@ -575,6 +575,15 @@ client.once('ready', async () => {
 // === MAIN MESSAGE HANDLER ===
 // =============================================
 client.on('messageCreate', async (message) => {
+    // --- DEBUG: Log every message to console to check readability ---
+    console.log(`📩 Received: "${message.content}" from ${message.author.tag} in ${message.channelId} `);
+
+    // If in the target voice channel text chat, reply to confirm visibility
+    if (message.channelId === "1473116208206188797" && !message.author.bot) {
+        console.log("✅ Message is from the target voice channel!");
+        // message.reply("👀 أنا شايفك! (تجربة)"); // Optional: Uncomment to test reply
+    }
+
     if (message.author.bot) return;
 
     // --- GLOBAL PAUSE CHECK ---
@@ -616,7 +625,7 @@ client.on('messageCreate', async (message) => {
                     if (!targetMember.bannable) return message.reply("ما أقدر أبنده، رتبته أعلى مني.");
 
                     await targetMember.ban({ reason: 'غير مرحب بك' });
-                    return message.reply(`✅ تم طرد **${targetMember.user.tag}** نهائياً.\n**السبب:** غير مرحب بك`);
+                    return message.reply(`✅ تم طرد ** ${targetMember.user.tag}** نهائياً.\n ** السبب:** غير مرحب بك`);
                 } catch (banError) {
                     console.error("Ban Error:", banError);
                     return message.reply("حدث خطأ أثناء محاولة الباند.");
@@ -639,8 +648,8 @@ client.on('messageCreate', async (message) => {
 
         // Check if user is in the target channel
         if (message.member?.voice?.channelId !== targetChannelId) {
-            console.log(`Debug: User in ${message.member?.voice?.channelId}, Expected ${targetChannelId}`);
-            return message.reply(`❌ **عذراً!** الخدمة الصوتية حصرية في هذا الروم فقط:\n<#${targetChannelId}>\n(تأكد انك داخل الروم وانسخه صح!).\nID: ${targetChannelId}`);
+            console.log(`Debug: User in ${message.member?.voice?.channelId}, Expected ${targetChannelId} `);
+            return message.reply(`❌ ** عذراً! ** الخدمة الصوتية حصرية في هذا الروم فقط: \n < #${targetChannelId}>\n(تأكد انك داخل الروم وانسخه صح!).\nID: ${targetChannelId} `);
         }
 
         try {
@@ -659,7 +668,7 @@ client.on('messageCreate', async (message) => {
             // If we reach here, success!
         } catch (error) {
             console.error('Voice Error:', error);
-            await message.reply(`❌ واجهت مشكلة تقنية: ${error.message}`);
+            await message.reply(`❌ واجهت مشكلة تقنية: ${error.message} `);
         }
         return;
     }
@@ -709,10 +718,10 @@ client.on('messageCreate', async (message) => {
     }
 
     try {
-        console.log(`📩 [START] Processing message from ${message.author.tag}`);
+        console.log(`📩[START] Processing message from ${message.author.tag} `);
         await message.channel.sendTyping();
 
-        let cleanContent = message.content.replace(new RegExp(`<@!?${client.user?.id}>`, 'g'), '').trim();
+        let cleanContent = message.content.replace(new RegExp(`< @! ? ${client.user?.id}> `, 'g'), '').trim();
         if (!cleanContent && message.attachments.size === 0) cleanContent = "صِف لي ما في الصورة";
 
         console.log(`🔍 Cleaned: "${cleanContent}"`);
@@ -735,38 +744,38 @@ client.on('messageCreate', async (message) => {
         if (isExistingCustomer) {
             aiMessages.push({
                 role: "system",
-                content: `🟢 [حالة المستخدم]: هذا المستخدم "${message.author.username}" عنده رتبة "عميل" في السيرفر — يعني هو مشتري سابق وموثوق ✅.
+                content: `🟢[حالة المستخدم]: هذا المستخدم "${message.author.username}" عنده رتبة "عميل" في السيرفر — يعني هو مشتري سابق وموثوق ✅.
                 المطلوب منك:
-                1. رحب فيه بحرارة: "يا هلا والله بعميلنا الغالي! 😍"
-                2. اسأله مباشرة كيف تقدر تساعده: "بشر عسى أمورك طيبة؟ واجهتك أي مشكلة في السبوفر؟"
-                3. إذا اشتكى من مشكلة: ابدأ في حلها فوراً (خطوة بخطوة) ولا تطلب منه أي إثبات أو فاتورة نهائياً.
+    1. رحب فيه بحرارة: "يا هلا والله بعميلنا الغالي! 😍"
+    2. اسأله مباشرة كيف تقدر تساعده: "بشر عسى أمورك طيبة؟ واجهتك أي مشكلة في السبوفر؟"
+    3. إذا اشتكى من مشكلة: ابدأ في حلها فوراً(خطوة بخطوة) ولا تطلب منه أي إثبات أو فاتورة نهائياً.
                 4. خلك صبور جداً معه ومساعد لأبعد حد.`
             });
         } else {
             aiMessages.push({
                 role: "system",
-                content: `🔴 [حالة المستخدم]: هذا المستخدم "${message.author.username}" ما عنده رتبة "عميل" — يعني هو زبون جديد ما اشترى بعد. هدفك تقنعه يشتري. كن حماسي واعرض المنتجات بشكل جذاب. إذا قال "شريت" أو "دفعت" اطلب منه صورة الفاتورة فوراً.`
+                content: `🔴[حالة المستخدم]: هذا المستخدم "${message.author.username}" ما عنده رتبة "عميل" — يعني هو زبون جديد ما اشترى بعد.هدفك تقنعه يشتري.كن حماسي واعرض المنتجات بشكل جذاب.إذا قال "شريت" أو "دفعت" اطلب منه صورة الفاتورة فوراً.`
             });
         }
 
         // --- INJECT LONG-TERM MEMORY (Feature #121) ---
         if (userProfile && userProfile.totalMessages > 1) {
-            let memoryContext = `📋 [ذاكرة طويلة المدى - هذا العميل تكلمنا معه قبل]:\n`;
-            memoryContext += `- الاسم: ${userProfile.username}\n`;
-            memoryContext += `- أول ظهور: ${new Date(userProfile.firstSeen).toLocaleDateString('ar-SA')}\n`;
-            memoryContext += `- عدد رسائله الكلي: ${userProfile.totalMessages}\n`;
+            let memoryContext = `📋[ذاكرة طويلة المدى - هذا العميل تكلمنا معه قبل]: \n`;
+            memoryContext += `- الاسم: ${userProfile.username} \n`;
+            memoryContext += `- أول ظهور: ${new Date(userProfile.firstSeen).toLocaleDateString('ar-SA')} \n`;
+            memoryContext += `- عدد رسائله الكلي: ${userProfile.totalMessages} \n`;
 
             if (userProfile.purchaseHistory.length > 0) {
-                memoryContext += `- سجل الشراء: ${userProfile.purchaseHistory.slice(-3).join(' | ')}\n`;
+                memoryContext += `- سجل الشراء: ${userProfile.purchaseHistory.slice(-3).join(' | ')} \n`;
             }
             if (userProfile.issueHistory.length > 0) {
-                memoryContext += `- مشاكل سابقة: ${userProfile.issueHistory.slice(-3).join(' | ')}\n`;
+                memoryContext += `- مشاكل سابقة: ${userProfile.issueHistory.slice(-3).join(' | ')} \n`;
             }
             if (userProfile.recentTopics.length > 0) {
-                memoryContext += `- مواضيع اهتمامه: ${userProfile.recentTopics.join(', ')}\n`;
+                memoryContext += `- مواضيع اهتمامه: ${userProfile.recentTopics.join(', ')} \n`;
             }
 
-            memoryContext += `\nاستخدم هذي المعلومات عشان تخدمه بشكل شخصي. مثلاً: "أشوفك سألت عن فورتنايت قبل" أو "مرحبا مرة ثانية!"`;
+            memoryContext += `\nاستخدم هذي المعلومات عشان تخدمه بشكل شخصي.مثلاً: "أشوفك سألت عن فورتنايت قبل" أو "مرحبا مرة ثانية!"`;
 
             aiMessages.push({ role: "system", content: memoryContext });
         }
@@ -776,7 +785,7 @@ client.on('messageCreate', async (message) => {
         if (convSummary) {
             aiMessages.push({
                 role: "system",
-                content: `📝 [ملخص محادثات سابقة مع هذا العميل]:\n${convSummary}\n\nاستخدم هذا السياق لتقديم خدمة أفضل. لا تكرر نفس المعلومات إلا إذا طلبها.`
+                content: `📝[ملخص محادثات سابقة مع هذا العميل]: \n${convSummary} \n\nاستخدم هذا السياق لتقديم خدمة أفضل.لا تكرر نفس المعلومات إلا إذا طلبها.`
             });
         }
 
@@ -784,11 +793,11 @@ client.on('messageCreate', async (message) => {
         const relevantKnowledge = findRelevantKnowledge(cleanContent);
         if (relevantKnowledge.length > 0) {
             const knowledgeText = relevantKnowledge.map(k =>
-                `- الموضوع "${k.pattern}" (سُئل ${k.count} مرة)`
+                `- الموضوع "${k.pattern}"(سُئل ${k.count} مرة)`
             ).join('\n');
             aiMessages.push({
                 role: "system",
-                content: `📚 [معلومات من قاعدة المعرفة المكتسبة - المواضيع الشائعة]:\n${knowledgeText}\nهذي المواضيع يسألون عنها كثير، رد بثقة وبالتفصيل.`
+                content: `📚[معلومات من قاعدة المعرفة المكتسبة - المواضيع الشائعة]: \n${knowledgeText} \nهذي المواضيع يسألون عنها كثير، رد بثقة وبالتفصيل.`
             });
         }
 
@@ -816,7 +825,7 @@ client.on('messageCreate', async (message) => {
                 const arrayBuffer = await response.arrayBuffer();
                 const buffer = Buffer.from(arrayBuffer);
                 const base64Data = buffer.toString("base64");
-                const dataURL = `data:${mimeType};base64,${base64Data}`;
+                const dataURL = `data: ${mimeType}; base64, ${base64Data} `;
 
                 userContent.push({
                     type: mimeType.startsWith('image/') ? "image_url" : "input_file",
