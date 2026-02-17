@@ -783,7 +783,7 @@ client.on('messageCreate', async (message) => {
                 const arrayBuffer = await response.arrayBuffer();
                 const buffer = Buffer.from(arrayBuffer);
                 const base64Data = buffer.toString("base64");
-                const dataURL = `data: ${mimeType}; base64, ${base64Data} `;
+                const dataURL = `data:${mimeType};base64,${base64Data}`;
 
                 userContent.push({
                     type: mimeType.startsWith('image/') ? "image_url" : "input_file",

@@ -1,3 +1,11 @@
 node_modules/
 data/
 .env
+package-lock.json
+test-cert.js
+test-cert.png
+test_spiritx.js
+test_reset.js
+check_models.js
+list_gemini_models.js
+voiceHandler.js
