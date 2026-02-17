@@ -4,8 +4,7 @@
     "description": "A Discord bot powered by Google Gemini AI",
     "main": "index.js",
     "scripts": {
-        "start": "node index.js",
-        "postinstall": "node download-font.js"
+        "start": "node index.js"
     },
     "keywords": [
         "discord",
