@@ -568,7 +568,7 @@ client.on('messageCreate', async (message) => {
     const isDM = message.channel.type === 1;
     const isMentioned = client.user && message.mentions.has(client.user);
     const isAutoReplyChannel = message.channel.id === AUTO_REPLY_CHANNEL_ID;
-    const isTicket = false; // Ticket system removed
+
 
 
     // SILENCE COMMAND (per-channel, admin only)
@@ -717,8 +717,13 @@ client.on('messageCreate', async (message) => {
 
 
     // --- CHANNEL RESTRICTION ---
-    // Bot only responds in: AUTO_REPLY_CHANNEL and DMs
-    if (!isDM && !isMentioned && !isAutoReplyChannel) return;
+    // Bot only responds in: AUTO_REPLY_CHANNEL, Tickets, and DMs
+    const isTicket = message.channel.name?.toLowerCase().includes('ticket') ||
+        message.channel.name?.includes('تذكرة') ||
+        message.channel.name?.includes('🎫') ||
+        message.channel.topic?.includes('Ticket ID');
+
+    if (!isDM && !isMentioned && !isAutoReplyChannel && !isTicket) return;
 
     // --- COMPATIBILITY CALCULATOR COMMAND (Feature #230) ---
     const msgLower = message.content.toLowerCase().trim();
@@ -1228,114 +1233,7 @@ client.on('interactionCreate', async (interaction) => {
         await interaction.update({ content: "❌ تم رفض التقييم.", embeds: [], components: [] });
     }
 
-    // --- SMART TICKET CREATION (Feature #7) ---
-    if (interaction.customId === 'create_ticket') {
-        // Check if user already has an open ticket
-        if (activeTickets.has(interaction.user.id)) {
-            const existingChannel = activeTickets.get(interaction.user.id);
-            return interaction.reply({
-                content: `❌ عندك تذكرة مفتوحة بالفعل! روح لها هنا: <#${existingChannel}>`,
-                ephemeral: true
-            });
-        }
-
-        await interaction.deferReply({ ephemeral: true });
-
-        try {
-            // Create private ticket channel
-            const ticketChannel = await interaction.guild.channels.create({
-                name: `تذكرة-${interaction.user.username}`,
-                type: ChannelType.GuildText,
-                parent: interaction.channel.parent, // Same category
-                permissionOverwrites: [
-                    {
-                        id: interaction.guild.id, // @everyone
-                        deny: [PermissionFlagsBits.ViewChannel],
-                    },
-                    {
-                        id: interaction.user.id, // Ticket creator
-                        allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.AttachFiles],
-                    },
-                    {
-                        id: client.user.id, // Bot
-                        allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.ManageChannels],
-                    },
-                    {
-                        id: DISCLAIMER_USER_ID, // Admin 1
-                        allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages],
-                    },
-                    {
-                        id: SECOND_ADMIN_ID, // Admin 2
-                        allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages],
-                    },
-                ],
-            });
-
-            activeTickets.set(interaction.user.id, ticketChannel.id);
-
-            // Welcome message inside the ticket
-            const welcomeEmbed = new EmbedBuilder()
-                .setTitle('🎫 تذكرة دعم جديدة')
-                .setDescription(
-                    `مرحباً **${interaction.user.username}**! 👋\n\n` +
-                    '🤖 أنا مساعد T3N الذكي، وبساعدك فوراً!\n\n' +
-                    '📝 **اكتب مشكلتك بالتفصيل** وإذا عندك صورة خطأ أرسلها وبحللها لك بالذكاء الاصطناعي! 📸\n\n' +
-                    '⚡ البوت بيصنّف مشكلتك تلقائياً ويبدأ يساعدك.'
-                )
-                .setColor(0x5865F2)
-                .setTimestamp();
-
-            const closeRow = new ActionRowBuilder()
-                .addComponents(
-                    new ButtonBuilder()
-                        .setCustomId('close_ticket')
-                        .setLabel('🔒 إغلاق التذكرة')
-                        .setStyle(ButtonStyle.Danger),
-                );
-
-            await ticketChannel.send({ content: `<@${interaction.user.id}>`, embeds: [welcomeEmbed], components: [closeRow] });
-
-            await interaction.editReply({
-                content: `✅ تم فتح تذكرتك! روح لها هنا: <#${ticketChannel.id}>`,
-            });
-
-            console.log(`🎫 Ticket created for ${interaction.user.tag} → #${ticketChannel.name}`);
-
-        } catch (err) {
-            console.error('Ticket Creation Error:', err.message);
-            await interaction.editReply({ content: '❌ حدث خطأ أثناء إنشاء التذكرة. تأكد من صلاحيات البوت.' });
-        }
-    }
-
-    // --- CLOSE TICKET ---
-    if (interaction.customId === 'close_ticket') {
-        try {
-            // Remove from active tickets
-            for (const [userId, channelId] of activeTickets.entries()) {
-                if (channelId === interaction.channel.id) {
-                    activeTickets.delete(userId);
-                    break;
-                }
-            }
-
-            await interaction.reply({ content: '🔒 **تم إغلاق التذكرة!** سيتم حذف القناة خلال 5 ثواني...' });
-
-            // Log to admin
-            const adminChannel = await client.channels.fetch(ADMIN_LOG_CHANNEL_ID).catch(() => null);
-            if (adminChannel) {
-                const logEmbed = new EmbedBuilder()
-                    .setTitle('🎫 تذكرة مغلقة')
-                    .setDescription(`التذكرة: **${interaction.channel.name}**\nأغلقها: **${interaction.user.tag}**`)
-                    .setColor(0xFF6B6B)
-                    .setTimestamp();
-                await adminChannel.send({ embeds: [logEmbed] });
-            }
-
-            setTimeout(() => interaction.channel.delete().catch(() => { }), 5000);
-        } catch (err) {
-            console.error('Ticket Close Error:', err.message);
-        }
-    }
+    // Ticket interaction handlers removed
 
     // --- COMPATIBILITY CALCULATOR RESULTS (Feature #230) ---
     if (interaction.customId.startsWith('calc_')) {
