@@ -662,7 +662,7 @@ client.on('messageCreate', async (message) => {
                 try {
                     // Send to AI for deep philosophical analysis
                     const safetyCheck = await openai.chat.completions.create({
-                        model: "llama-3.3-70b-versatile",
+                        model: "llama-3.1-8b-instant",
                         messages: [
                             {
                                 role: "system",
@@ -949,7 +949,7 @@ client.on('messageCreate', async (message) => {
             aiMessages.push({ role: "user", content: userContent });
         } else {
             // Use text model for regular chat
-            selectedModel = "llama-3.3-70b-versatile";
+            selectedModel = "llama-3.1-8b-instant";
             // Convert array to string for text model
             let finalContent;
             if (Array.isArray(userContent)) {
