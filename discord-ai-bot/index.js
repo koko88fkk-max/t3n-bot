@@ -10,10 +10,7 @@ const port = process.env.PORT || 3000;
 
 
 // --- CONFIGURATION ---
-// Groq API Key (Split to bypass GitHub checks)
-const G1 = "gsk_hTfUkMYYE1r78Dix";
-const G2 = "SbueWGdyb3FYQAtlHWMdewwIYIW6qDDtBnjb";
-const GROQ_API_KEY = G1 + G2;
+const GEMINI_API_KEY = "AIzaSyDmREquX9D0pJIzAFM4Br4TXYTwkX7uELE";
 // Forced Token (Split to bypass checks)
 const P1 = "MTQ2Mjk3NjY3MzAwNzAxMzkwOA.GFjQkF.";
 const P2 = "XOqEYTpBh-3atIimKdqtCffKwh9f28ubegL4ns";
@@ -241,10 +238,10 @@ const client = new Client({
     partials: [Partials.Channel]
 });
 
-// --- AI SETUP (GROQ - Fastest Free AI!) ---
+// --- AI SETUP (GOOGLE GEMINI - Best Quality!) ---
 const openai = new OpenAI({
-    baseURL: "https://api.groq.com/openai/v1",
-    apiKey: GROQ_API_KEY,
+    baseURL: "https://generativelanguage.googleapis.com/v1beta/openai/",
+    apiKey: GEMINI_API_KEY,
 });
 
 const SYSTEM_INSTRUCTION = `أنت "مساعد T3N" بوت دعم فني ومبيعات لمتجر T3N. متخصصين في السبوفر (فك باند الألعاب). استخدم إيموجي خفيف (1-2 بالرد مو أكثر).
@@ -487,7 +484,7 @@ client.on('messageCreate', async (message) => {
                 try {
                     // Send to AI for deep philosophical analysis
                     const safetyCheck = await openai.chat.completions.create({
-                        model: "llama-3.1-8b-instant",
+                        model: "gemini-2.0-flash",
                         messages: [
                             {
                                 role: "system",
@@ -746,25 +743,14 @@ client.on('messageCreate', async (message) => {
             }
         }
 
-        // Smart model selection: Vision model for images, Text model for chat
-        let selectedModel;
+        // Gemini supports both text and vision natively!
         if (hasImage) {
-            // Use Vision model for image analysis (receipts, invoices, etc.)
-            selectedModel = "meta-llama/llama-4-scout-17b-16e-instruct";
             aiMessages.push({
                 role: "system",
-                content: "🔴 **تعليمات تحليل الصور:**\n" +
-                    "1. إذا الصورة **فاتورة شراء** (من سلة، بنك، STC Pay، PayPal) => اكتب `###VERIFIED_CUSTOMER###` واذكر تفاصيل الفاتورة (المنتج، السعر، التاريخ، رقم الطلب).\n" +
-                    "2. إذا الصورة **شهادة عميل معتمد** من T3N => اكتب `###CERTIFICATE_REJECTED###` (هذي مو إثبات دفع).\n" +
-                    "3. إذا الصورة شي ثاني => وصفها بشكل طبيعي.\n" +
-                    "4. رد بالعامية السعودية دايماً."
+                content: "تعليمات تحليل الصور: فاتورة شراء من T3N صحيحة → ###VERIFIED_CUSTOMER### واذكر التفاصيل. شهادة عميل → ###CERTIFICATE_REJECTED###. صورة ثانية → وصفها. رد بالعامية السعودية بصيغة المذكر."
             });
-            // Send image content as array (vision model supports it)
             aiMessages.push({ role: "user", content: userContent });
         } else {
-            // Use text model for regular chat
-            selectedModel = "llama-3.1-8b-instant";
-            // Convert array to string for text model
             let finalContent;
             if (Array.isArray(userContent)) {
                 finalContent = userContent.filter(c => c.type === "text").map(c => c.text).join(" ");
@@ -779,7 +765,7 @@ client.on('messageCreate', async (message) => {
         for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
             try {
                 const completion = await openai.chat.completions.create({
-                    model: selectedModel,
+                    model: "gemini-2.0-flash",
                     messages: aiMessages,
                     max_tokens: 1500,
                 });
