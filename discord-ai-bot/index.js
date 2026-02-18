@@ -21,11 +21,19 @@ const ADMIN_LOG_CHANNEL_ID = "1472360395363586138";
 const VOUCH_CHANNEL_ID = "1397221014215331891";
 const PUBLISH_APPROVAL_CHANNEL_ID = "1472498781877440634";
 const CONTROL_PANEL_CHANNEL_ID = "1472704260452909146";
-const TICKET_PANEL_CHANNEL_ID = AUTO_REPLY_CHANNEL_ID; // روم فتح التذاكر (نفس روم الرد التلقائي)
+const PROTECTED_CHANNELS = [
+    '1396960054476935469',
+    '1396971888554672129',
+    '1396966361401524357'
+];
+
+// TICKET_PANEL_CHANNEL_ID Removed
+
 
 // --- GLOBAL BOT STATE ---
 let isBotPaused = false;
-const activeTickets = new Map();
+// Active Tickets Map Removed
+
 
 // =============================================
 // === AI MEMORY & LEARNING SYSTEM (#62 #121 #130) ===
@@ -346,26 +354,17 @@ const SYSTEM_INSTRUCTION = `
     - كن واثق في تحليلك ومحدد.
     - إذا الصورة فيها أكثر من خطأ، حلل كل واحد على حدة.
 
-    ═══════════════════════════════════════
-    🎫 نظام التذاكر الذكي - ميزة #7:
-    ═══════════════════════════════════════
-    إذا كنت ترد في قناة تذكرة (ticket):
-    1. في أول رسالة من العميل، صنّف المشكلة تلقائياً وأضف التصنيف في بداية ردك:
-       - 🔧 [مشكلة تقنية] → إذا عنده خطأ أو المنتج ما اشتغل
-       - ❓ [استفسار] → إذا يسأل عن معلومات أو أسعار
-       - ⚠️ [شكوى] → إذا زعلان أو غاضب
-       - 💰 [طلب شراء] → إذا يبي يشتري أو يدفع
-       - 🔄 [متابعة طلب] → إذا يسأل عن طلب سابق
-    2. بعد التصنيف، ساعده فوراً.
-    3. في نهاية الحل (إذا انحلت المشكلة)، قل: "تم حل المشكلة بنجاح ✅ إذا مافي شي ثاني تقدر تقفل التذكرة. شكراً لك! 🙏"
+    // Ticket system instructions removed
 
-    🛑 **سيناريو الشراء والتحقق من الإيصال (صارم جداً):**
+
+    🛑 **سيناريو الشراء والتحقق من الإيصال (صارم جداً جداً):**
     1.  العميل يسأل -> اعطه الرابط.
     2.  العميل يقول "شريت" -> اطلب صورة الفاتورة فوراً.
     3.  **عند إرسال صورة:** حلل الصورة بدقة شديدة:
-        *   يجب أن تكون الفاتورة من "متجر T3N" أو عبر منصة "سلة" (Salla).
+        *   🛑 **يجب أن يظهر اسم المتجر "T3N Store" أو "متجر تين" بوضوح في الفاتورة.**
+        *   🛑 إذا كانت فاتورة "سلة" عامة بدون اسم المتجر -> **ارفضها فوراً**.
         *   يجب أن تحتوي على تفاصيل واضحة (رقم الطلب، المبلغ: 35 أو 49.99 أو 200 ر.س، اسم المنتج).
-        *   إذا كانت الصورة غير واضحة، أو مجرد سكرين شوت لمحادثة، أو صورة عشوائية، أو فاتورة لمتجر آخر -> **ارفضها فوراً** وقل: "هذا مو إيصال شراء من متجرنا يا غالي، تأكد وارسل لي صورة الفاتورة الأصلية."
+        *   إذا كانت الصورة غير واضحة، أو مجرد سكرين شوت لمحادثة، أو صورة عشوائية، أو فاتورة لمتجر آخر -> **ارفضها فوراً** وقل: "هذا مو إيصال شراء من متجرنا يا غالي، تأكد وارسل لي صورة الفاتورة الأصلية من متجر T3N."
     4.  فقط إذا كنت متأكداً 100% أنها فاتورة صحيحة من متجر T3N، رد بـ:
         ###VERIFIED_CUSTOMER###
     5.  مهم: لا ترسل كلمة التحقق للأشخاص الذين يرسلون صوراً لا علاقة لها بالدفع، كن شديداً في التدقيق.
@@ -477,7 +476,8 @@ async function logToWebhook(user, question, answer) {
 }
 
 // --- TICKET & HISTORY STATE ---
-const activeSupportTickets = new Set();
+// --- TICKET STATE REMOVED ---
+
 const conversationHistory = new Map(); // Feature #180: Per-USER history (not per-channel)
 const MAX_HISTORY = 20; // Increased from 10 for better context
 const MAX_COMPRESSED_SUMMARY = 5; // Compressed older messages to keep as summary
@@ -551,45 +551,8 @@ client.once('ready', async () => {
         }
     }, 600000); // Every 10 minutes (600,000 ms)
 
-    // --- SMART TICKET PANEL (Feature #7) ---
-    try {
-        const ticketChannel = await client.channels.fetch(TICKET_PANEL_CHANNEL_ID).catch(() => null);
-        if (ticketChannel) {
-            const messages = await ticketChannel.messages.fetch({ limit: 10 });
-            const existingTicketPanel = messages.find(m => m.author.id === client.user.id && m.embeds[0]?.title?.includes('تذكرة'));
+    // --- SMART TICKET PANEL REMOVED ---
 
-            if (!existingTicketPanel) {
-                const ticketEmbed = new EmbedBuilder()
-                    .setTitle('🎫 نظام التذاكر الذكي - T3N Support')
-                    .setDescription(
-                        '**مرحباً بك في دعم T3N الذكي!** 🤖\n\n' +
-                        'إذا عندك أي مشكلة أو استفسار، افتح تذكرة وبيجيك الرد فوراً بالذكاء الاصطناعي! ⚡\n\n' +
-                        '📋 **أنواع المساعدة:**\n' +
-                        '• 🔧 مشاكل تقنية (السبوفر ما اشتغل، خطأ، إلخ)\n' +
-                        '• ❓ استفسارات (أسعار، منتجات، طريقة الشراء)\n' +
-                        '• ⚠️ شكاوى أو اقتراحات\n' +
-                        '• 📸 تحليل صور الأخطاء بالذكاء الاصطناعي\n\n' +
-                        '👇 **اضغط الزر عشان تفتح تذكرة خاصة فيك:**'
-                    )
-                    .setColor(0x5865F2)
-                    .setFooter({ text: 'T3N Store - Smart Ticket System', iconURL: client.user.displayAvatarURL() })
-                    .setTimestamp();
-
-                const ticketRow = new ActionRowBuilder()
-                    .addComponents(
-                        new ButtonBuilder()
-                            .setCustomId('create_ticket')
-                            .setLabel('🎫 فتح تذكرة جديدة')
-                            .setStyle(ButtonStyle.Primary),
-                    );
-
-                await ticketChannel.send({ embeds: [ticketEmbed], components: [ticketRow] });
-                console.log('🎫 Smart Ticket Panel deployed!');
-            }
-        }
-    } catch (err) {
-        console.error("Ticket Panel Setup Error:", err.message);
-    }
 });
 
 // =============================================
@@ -605,21 +568,20 @@ client.on('messageCreate', async (message) => {
     const isDM = message.channel.type === 1;
     const isMentioned = client.user && message.mentions.has(client.user);
     const isAutoReplyChannel = message.channel.id === AUTO_REPLY_CHANNEL_ID;
-    const isTicket = message.channel.name?.includes('ticket-') ||
-        message.channel.name?.includes('تذكرة-') ||
-        message.channel.name?.includes('🎫');
+    const isTicket = false; // Ticket system removed
+
 
     // SILENCE COMMAND (per-channel, admin only)
     if (isMentioned && (message.author.id === DISCLAIMER_USER_ID || message.member?.permissions.has('Administrator'))) {
         const cleanContent = message.content.replace(/<@!?[0-9]+>/g, '').trim();
 
         if (cleanContent === '1' || message.content.toLowerCase().includes('stop') || message.content.includes('سكوت')) {
-            activeSupportTickets.add(message.channel.id);
+            // Silence logic removed/simplified as activeSupportTickets is gone
             await message.react('🤐');
             return;
         }
         if (cleanContent === '2' || message.content.toLowerCase().includes('start') || message.content.includes('تكلم')) {
-            activeSupportTickets.delete(message.channel.id);
+            // Resume logic
             await message.react('🗣️');
             return;
         }
@@ -647,10 +609,116 @@ client.on('messageCreate', async (message) => {
         }
     }
 
+    // =============================================
+    // === 🛡️ ADVANCED PROTECTION SYSTEM (Feature #SafeGuard) ===
+    // =============================================
+    if (PROTECTED_CHANNELS.includes(message.channel.id)) {
+        // 1. Anti-Link (Instant Ban 🚫)
+        // Regex for Discord invites (gg, io, me, li, discordapp.com/invite)
+        const linkRegex = /(https?:\/\/)?(www\.)?(discord\.(gg|io|me|li)|discordapp\.com\/invite)\/.+/i;
+
+        if (linkRegex.test(message.content)) {
+            // Allow "t3n" links (case insensitive)
+            if (!message.content.toLowerCase().includes('t3n')) {
+                try {
+                    await message.delete().catch(() => { }); // Delete message first
+
+                    if (message.member && message.member.bannable) {
+                        // LOG THE BAN
+                        const adminChannel = await client.channels.fetch(ADMIN_LOG_CHANNEL_ID).catch(() => null);
+                        if (adminChannel) {
+                            const logEmbed = new EmbedBuilder()
+                                .setTitle('🚨 نظام الحماية - BANNED ⛔')
+                                .setDescription(`**العضو:** ${message.author.tag} (${message.author.id})\n**السبب:** نشر روابط دعوة مخالفة\n**الرسالة:** ${message.content}`)
+                                .setColor(0xFF0000)
+                                .setThumbnail(message.author.displayAvatarURL())
+                                .setTimestamp();
+                            await adminChannel.send({ embeds: [logEmbed] });
+                        }
+
+                        // DM THE USER
+                        await message.author.send(`🚫 **تم حظرك من سيرفر T3N.**\n\nالسبب: نشر روابط خارجية ممنوعة.\n\n😏 *"كان غيرك أشطر"*`).catch(() => { });
+
+                        // BAN THE USER
+                        await message.member.ban({ reason: 'Anti-Ad: نشر روابط ديسكورد خارجية' });
+                    }
+                } catch (e) {
+                    console.error("Anti-Link Protection Error:", e);
+                }
+                return; // Stop processing further
+            }
+        }
+
+        // 2. Anti-Insult (AI-Powered 🧠)
+        // Check text messages (ignore commands and admin messages)
+        const isCommand = message.content.startsWith('!');
+        const isAdmin = message.member?.permissions.has('Administrator');
+
+        if (!isCommand && !isAdmin && !message.author.bot && message.content.length > 1) {
+            // We run this asynchronously to not block the bot
+            (async () => {
+                try {
+                    // Send to AI for deep philosophical analysis
+                    const safetyCheck = await openai.chat.completions.create({
+                        model: "google/gemini-2.0-flash-001",
+                        messages: [
+                            {
+                                role: "system",
+                                content: `You are a highly intelligent, philosophical moderation AI for a Discord server. 
+                                Your Task: Analyze the following Arabic text deeply. Determine if it contains distinct INSULTS, CURSING, or HATE SPEECH (سب، قذف، شتائم).
+                                
+                                ⚖️ **JUDGMENT RULES:**
+                                - **TOXIC:** Direct insults ('يا كلب', 'يا حمار', 'يا ورع'), cursing, racism, or attacks on dignity.
+                                - **SAFE:** Religious advice ('اتق الله', 'الله يهديك'), constructive criticism, normal conversation, slang that is NOT insulting, or questions.
+                                - **Context Matters:** 'الله يلعن الشيطان' is SAFE. 'الله يلعنك' is TOXIC.
+                                
+                                Output ONLY one word: "TOXIC" or "SAFE".`
+                            },
+                            { role: "user", content: message.content }
+                        ],
+                        temperature: 0,
+                        max_tokens: 10
+                    });
+
+                    const analysisResult = safetyCheck.choices[0].message.content.trim().toUpperCase();
+
+                    if (analysisResult.includes('TOXIC')) {
+                        // Action: Timeout 5 Minutes
+                        await message.delete().catch(() => { });
+
+                        if (message.member && message.member.moderatable) {
+                            await message.member.timeout(5 * 60 * 1000, 'AI Moderation: Insult/Toxic Behavior');
+
+                            // Initial Warning in Chat
+                            const replyMsg = await message.channel.send(`<@${message.author.id}> 🤐 **تم إسكاتك لمدة 5 دقائق.**\nاحترم الموجودين، وتذكر: *"ما يلفظ من قول إلا لديه رقيب عتيد"*`);
+                            setTimeout(() => replyMsg.delete().catch(() => { }), 10000); // Delete warning after 10s
+
+                            // Log to Admin
+                            const adminChannel = await client.channels.fetch(ADMIN_LOG_CHANNEL_ID).catch(() => null);
+                            if (adminChannel) {
+                                const logEmbed = new EmbedBuilder()
+                                    .setTitle('🤐 نظام الحماية - TIMEOUT')
+                                    .setDescription(`**العضو:** ${message.author.tag}\n**السبب:** ألفاظ غير لائقة (AI Detected)\n**الرسالة:** ${message.content}\n**العقوبة:** Timeout 5m`)
+                                    .setColor(0xFFA500)
+                                    .setTimestamp();
+                                await adminChannel.send({ embeds: [logEmbed] });
+                            }
+
+                            // DM User
+                            await message.author.send(`⏳ **تم إعطاؤك تايم آوت (5 دقائق).**\n\nالسبب: استخدام ألفاظ غير لائقة.\nتم رصد المخالفة تلقائياً. المرة القادمة عقوبة أشد.`).catch(() => { });
+                        }
+                    }
+                } catch (e) {
+                    console.error("AI Mod Error:", e);
+                }
+            })();
+        }
+    }
+
+
     // --- CHANNEL RESTRICTION ---
-    // Bot only responds in: AUTO_REPLY_CHANNEL, Tickets, and DMs
-    if (activeSupportTickets.has(message.channel.id)) return;
-    if (!isDM && !isMentioned && !isAutoReplyChannel && !isTicket) return;
+    // Bot only responds in: AUTO_REPLY_CHANNEL and DMs
+    if (!isDM && !isMentioned && !isAutoReplyChannel) return;
 
     // --- COMPATIBILITY CALCULATOR COMMAND (Feature #230) ---
     const msgLower = message.content.toLowerCase().trim();
