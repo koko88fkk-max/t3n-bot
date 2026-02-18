@@ -739,14 +739,14 @@ client.on('messageCreate', async (message) => {
     // 1. Reset Key / HWID Reset requests
     const resetKeywords = ['رست key', 'رست كي', 'رسي كي', 'رست المفتاح', 'ريست المفتاح', 'ريست كي', 'reset key', 'reset hwid', 'رست هويد', 'ريست هويد', 'اريد رست', 'ابي رست', 'ابغى رست'];
     if (resetKeywords.some(kw => msgLower.includes(kw))) {
-        await message.reply({ content: `ابشر ثواني من وقتك اتواصل مع الادارة 🔄\n\n<@1315014140804206636> <@1320194211978543114>`, allowedMentions: { repliedUser: false } });
+        await message.reply({ content: `ابشر ثواني من وقتك اتواصل مع الادارة 🔄\n\n<@1315014140804206636> <@1320194211978543114>`, allowedMentions: { repliedUser: false, parse: ['users'] } });
         return;
     }
 
     // 2. License Failed / Key not working (text messages)
     const licenseFailKeywords = ['الكي مو شغال', 'المفتاح مايشتغل', 'المفتاح ما يشتغل', 'الكي ما يشتغل', 'الكي خلص', 'المفتاح خلص', 'invalid license', 'license failed', 'no active subscription', 'الكي ماشتغل', 'المفتاح مو شغال', 'الكي غلط', 'المفتاح غلط', 'كي خطأ', 'مفتاح خطأ'];
     if (licenseFailKeywords.some(kw => msgLower.includes(kw))) {
-        await message.reply({ content: `تمام ثواني اتواصل مع الادارة 🔑\n\n<@1315014140804206636> <@1320194211978543114>`, allowedMentions: { repliedUser: false } });
+        await message.reply({ content: `تمام ثواني اتواصل مع الادارة 🔑\n\n<@1315014140804206636> <@1320194211978543114>`, allowedMentions: { repliedUser: false, parse: ['users'] } });
         return;
     }
 
@@ -761,7 +761,7 @@ client.on('messageCreate', async (message) => {
     const adminMentioned = msgRaw.includes('1315014140804206636') || msgRaw.includes('1320194211978543114');
     const callKeywords = ['تعال', 'موجود', 'ابيكم', 'ابيك', 'احد يسحبني', 'سحبوني', 'وينكم', 'وينك', 'ردوا', 'رد علي', 'فينك', 'فينكم'];
     if (adminMentioned && callKeywords.some(kw => msgLower.includes(kw))) {
-        await message.reply({ content: `حياك تفضل بالانتظار في هذا الروم <#1396967239948701859> حتى يسحبوك ويردون عليك 🙏\n\n<@1315014140804206636> <@1320194211978543114>`, allowedMentions: { repliedUser: false } });
+        await message.reply({ content: `حياك تفضل بالانتظار في هذا الروم <#1396967239948701859> حتى يسحبوك ويردون عليك 🙏\n\n<@1315014140804206636> <@1320194211978543114>`, allowedMentions: { repliedUser: false, parse: ['users'] } });
         return;
     }
 
