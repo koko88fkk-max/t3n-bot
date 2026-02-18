@@ -932,27 +932,40 @@ client.on('messageCreate', async (message) => {
             }
         }
 
-        // Groq only accepts string content (no vision/image support)
-        // Convert userContent array to plain string for compatibility
-        let finalContent;
+        // Smart model selection: Vision model for images, Text model for chat
+        let selectedModel;
         if (hasImage) {
-            // Extract text parts only, ignore images
-            const textParts = userContent.filter(c => c.type === "text").map(c => c.text);
-            finalContent = (textParts.join(" ") + " [المستخدم أرسل صورة - لا يمكن تحليلها حالياً]").trim();
-        } else if (Array.isArray(userContent)) {
-            finalContent = userContent.filter(c => c.type === "text").map(c => c.text).join(" ");
+            // Use Vision model for image analysis (receipts, invoices, etc.)
+            selectedModel = "meta-llama/llama-4-scout-17b-16e-instruct";
+            aiMessages.push({
+                role: "system",
+                content: "🔴 **تعليمات تحليل الصور:**\n" +
+                    "1. إذا الصورة **فاتورة شراء** (من سلة، بنك، STC Pay، PayPal) => اكتب `###VERIFIED_CUSTOMER###` واذكر تفاصيل الفاتورة (المنتج، السعر، التاريخ، رقم الطلب).\n" +
+                    "2. إذا الصورة **شهادة عميل معتمد** من T3N => اكتب `###CERTIFICATE_REJECTED###` (هذي مو إثبات دفع).\n" +
+                    "3. إذا الصورة شي ثاني => وصفها بشكل طبيعي.\n" +
+                    "4. رد بالعامية السعودية دايماً."
+            });
+            // Send image content as array (vision model supports it)
+            aiMessages.push({ role: "user", content: userContent });
         } else {
-            finalContent = userContent;
+            // Use text model for regular chat
+            selectedModel = "llama-3.3-70b-versatile";
+            // Convert array to string for text model
+            let finalContent;
+            if (Array.isArray(userContent)) {
+                finalContent = userContent.filter(c => c.type === "text").map(c => c.text).join(" ");
+            } else {
+                finalContent = userContent;
+            }
+            aiMessages.push({ role: "user", content: finalContent });
         }
-
-        aiMessages.push({ role: "user", content: finalContent });
 
         let text = "";
         const MAX_RETRIES = 3;
         for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
             try {
                 const completion = await openai.chat.completions.create({
-                    model: "llama-3.3-70b-versatile",
+                    model: selectedModel,
                     messages: aiMessages,
                     max_tokens: 1500,
                 });
