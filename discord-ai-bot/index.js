@@ -481,7 +481,7 @@ client.on('messageCreate', async (message) => {
                 try {
                     // Send to AI for deep philosophical analysis
                     const safetyCheck = await openai.chat.completions.create({
-                        model: "gemini-2.0-flash",
+                        model: "gemini-2.0-flash-lite",
                         messages: [
                             {
                                 role: "system",
