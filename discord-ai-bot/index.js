@@ -10,7 +10,7 @@ const port = process.env.PORT || 3000;
 
 
 // --- CONFIGURATION ---
-const OPENROUTER_API_KEY = "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"; // Forced New Key (Render Env Ignored)
+const OPENROUTER_API_KEY = "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"; // Forced New Key (Render Env Ignored)
 // Forced Token (Split to bypass checks)
 const P1 = "MTQ2Mjk3NjY3MzAwNzAxMzkwOA.GFjQkF.";
 const P2 = "XOqEYTpBh-3atIimKdqtCffKwh9f28ubegL4ns";
