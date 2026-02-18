@@ -9,3 +9,5 @@ test_reset.js
 check_models.js
 list_gemini_models.js
 voiceHandler.js
+test_gemini.js
+test_openrouter.js
