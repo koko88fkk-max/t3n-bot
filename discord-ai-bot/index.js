@@ -692,7 +692,7 @@ client.on('messageCreate', async (message) => {
             }
         }
 
-        // Gemini supports text + vision natively
+        // Groq: vision model for images, text model for text
         if (hasImage) {
             aiMessages.push({ role: "system", content: "فاتورة T3N صحيحة → ###VERIFIED_CUSTOMER###. شهادة عميل → ###CERTIFICATE_REJECTED###. صورة ثانية → وصفها. رد بالعامية بصيغة المذكر." });
             aiMessages.push({ role: "user", content: userContent });
@@ -706,12 +706,23 @@ client.on('messageCreate', async (message) => {
             aiMessages.push({ role: "user", content: finalContent });
         }
 
+        // Ensure ALL messages have string content (Groq requirement)
+        for (let i = 0; i < aiMessages.length - 1; i++) {
+            if (Array.isArray(aiMessages[i].content)) {
+                aiMessages[i].content = aiMessages[i].content
+                    .filter(c => c.type === "text")
+                    .map(c => c.text)
+                    .join(" ") || "[صورة]";
+            }
+        }
+
         let text = "";
         const MAX_RETRIES = 3;
+        const modelToUse = hasImage ? "llama-3.2-11b-vision-preview" : "llama-3.3-70b-versatile";
         for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
             try {
                 const completion = await openai.chat.completions.create({
-                    model: "llama-3.3-70b-versatile",
+                    model: modelToUse,
                     messages: aiMessages,
                     max_tokens: 1500,
                 });
