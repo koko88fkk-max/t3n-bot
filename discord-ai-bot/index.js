@@ -463,6 +463,8 @@ client.on('messageCreate', async (message) => {
 
         // 2. Anti-Insult (AI-Powered 🧠)
         // Check text messages (ignore commands and admin messages)
+        // DEBUG: Msg Receipt
+        console.log(`📥 Msg: ${message.content.substring(0, 30)} | Ch: ${message.channel.name}`);
         const isCommand = message.content.startsWith('!');
         const isAdmin = message.member?.permissions.has('Administrator');
 
@@ -813,6 +815,8 @@ client.on('messageCreate', async (message) => {
             }
 
             // --- SEND RESPONSE ---
+            console.log("📤 Sending response...");
+
             if (text.length > 2000) {
                 const chunks = text.match(/[\s\S]{1,2000}/g) || [];
                 for (const chunk of chunks) {
