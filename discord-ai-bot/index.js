@@ -10,7 +10,7 @@ const port = process.env.PORT || 3000;
 
 
 // --- CONFIGURATION ---
-const OPENROUTER_API_KEY = "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"; // Forced New Key (Render Env Ignored)
+const GEMINI_API_KEY = "AIzaSyDmREquX9D0pJIzAFM4Br4TXYTwkX7uELE"; // Google Gemini API Key (Direct, No OpenRouter)
 // Forced Token (Split to bypass checks)
 const P1 = "MTQ2Mjk3NjY3MzAwNzAxMzkwOA.GFjQkF.";
 const P2 = "XOqEYTpBh-3atIimKdqtCffKwh9f28ubegL4ns";
@@ -238,14 +238,10 @@ const client = new Client({
     partials: [Partials.Channel]
 });
 
-// --- AI SETUP (OPENROUTER) ---
+// --- AI SETUP (GOOGLE GEMINI DIRECT) ---
 const openai = new OpenAI({
-    baseURL: "https://openrouter.ai/api/v1",
-    apiKey: OPENROUTER_API_KEY,
-    defaultHeaders: {
-        "HTTP-Referer": "https://discord.com",
-        "X-Title": "T3N Discord Bot",
-    }
+    baseURL: "https://generativelanguage.googleapis.com/v1beta/openai/",
+    apiKey: GEMINI_API_KEY,
 });
 
 const SYSTEM_INSTRUCTION = `
@@ -663,7 +659,7 @@ client.on('messageCreate', async (message) => {
                 try {
                     // Send to AI for deep philosophical analysis
                     const safetyCheck = await openai.chat.completions.create({
-                        model: "google/gemini-2.0-flash-001",
+                        model: "gemini-2.0-flash",
                         messages: [
                             {
                                 role: "system",
@@ -948,7 +944,7 @@ client.on('messageCreate', async (message) => {
         let text = "";
         try {
             const completion = await openai.chat.completions.create({
-                model: "google/gemini-2.0-flash-001",
+                model: "gemini-2.0-flash",
                 messages: aiMessages,
                 max_tokens: 1500, // Limit tokens to save credits (Fix 402 Error)
             });
@@ -960,7 +956,7 @@ client.on('messageCreate', async (message) => {
                 await new Promise(resolve => setTimeout(resolve, 4000));
 
                 const completionRetry = await openai.chat.completions.create({
-                    model: "google/gemini-2.0-flash-001",
+                    model: "gemini-2.0-flash",
                     messages: aiMessages,
                     max_tokens: 1500, // Limit tokens
                 });
