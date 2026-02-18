@@ -10,9 +10,7 @@ const port = process.env.PORT || 3000;
 
 
 // --- CONFIGURATION ---
-const G1 = "gsk_hTfUkMYYE1r78Dix";
-const G2 = "SbueWGdyb3FYQAtlHWMdewwIYIW6qDDtBnjb";
-const GROQ_API_KEY = G1 + G2;
+const GEMINI_API_KEY = "AIzaSyBVhIc5tEH3kxzKT71PbG5kleuozmVZXUE";
 // Forced Token (Split to bypass checks)
 const P1 = "MTQ2Mjk3NjY3MzAwNzAxMzkwOA.GFjQkF.";
 const P2 = "XOqEYTpBh-3atIimKdqtCffKwh9f28ubegL4ns";
@@ -240,10 +238,10 @@ const client = new Client({
     partials: [Partials.Channel]
 });
 
-// --- AI SETUP (GROQ) ---
+// --- AI SETUP (GOOGLE GEMINI - Paid) ---
 const openai = new OpenAI({
-    baseURL: "https://api.groq.com/openai/v1",
-    apiKey: GROQ_API_KEY,
+    baseURL: "https://generativelanguage.googleapis.com/v1beta/openai/",
+    apiKey: GEMINI_API_KEY,
 });
 
 const SYSTEM_INSTRUCTION = `أنت بوت خدمة عملاء لمتجر T3N (سبوفر/فك باند ألعاب).
@@ -254,12 +252,12 @@ const SYSTEM_INSTRUCTION = `أنت بوت خدمة عملاء لمتجر T3N (س
 لا تسوّق ولا تبيع. إذا أحد سأل عن المنتجات أو الأسعار عطه المعلومة، لكن لا تحاول تقنعه يشتري.
 
 المنتجات 3:
-🎮 سبوفر فورتنايت (49.99 ر.س): يفك باند فورتنايت نهائي + بطولات. استخدام مرة وحدة. لفورتنايت بس.
-🎯 سبوفر بيرم (35 ر.س): يفك باند كود/فالو/ابكس/وغيرها. استخدام مرة وحدة. لكل الألعاب إلا فورتنايت.
-💎 سبوفر VIP (200 ر.س): مفتاح مدى الحياة لكل الألعاب. كل ما تبندت تستخدمه مرة ثانية.
+🎮 سبوفر فورتنايت (49.99 ر.س): هذا المنتج من السبوفر الفورتنايت، بفك باند فورتنايت نهائي + بطولات. راح تستخدمه مرة واحد فقط. لفورتنايت بس.
+🎯 سبوفر بيرم (30 ر.س): هذا المنتج من السبوفر بيرم، بيفك باند كود، فالو، ابكس فايف ام، وغيرها. راح تستخدمه مرة واحد فقط. لكل الألعاب إلا فورتنايت.
+💎 سبوفر VIP (200 ر.س): هذا المنتج السبوفر VIP، مفتاح مدى الحياة لكل الألعاب. كل ماتتبند، راح تستخدمه مرة ثانية.
 المتجر: https://salla.sa/t3nn
 
-سأل بكم/الأسعار → اعطه المنتجات الثلاث. سأل وش الفرق → وضحله.
+سأل بكم/الأسعار → اعطه المنتجات الثلاث بالوصف اللي فوق. سأل وش الفرق → وضحله.
 قال شريت/دفعت → اطلب صورة الفاتورة. فاتورة T3N صحيحة → ###VERIFIED_CUSTOMER### شهادة عميل → ###CERTIFICATE_REJECTED###
 سوشل ميديا → "متخصصين فك باند ألعاب بس يالغالي"
 FAQ: ضمان 100%. فورمات ما يحتاج إلا لو ما زبط. شاشة زرقاء → حمل WARP. Key Invalid → انسخه صح. DLL → حمل VC++. Access Denied → شغله كمسؤول.
@@ -481,7 +479,7 @@ client.on('messageCreate', async (message) => {
                 try {
                     // Send to AI for deep philosophical analysis
                     const safetyCheck = await openai.chat.completions.create({
-                        model: "llama-3.1-8b-instant",
+                        model: "gemini-2.0-flash",
                         messages: [
                             {
                                 role: "system",
@@ -740,14 +738,11 @@ client.on('messageCreate', async (message) => {
             }
         }
 
-        // Vision model for images, text model for chat
-        let selectedModel;
+        // Gemini supports text + vision natively
         if (hasImage) {
-            selectedModel = "meta-llama/llama-4-scout-17b-16e-instruct";
             aiMessages.push({ role: "system", content: "فاتورة T3N صحيحة → ###VERIFIED_CUSTOMER###. شهادة عميل → ###CERTIFICATE_REJECTED###. صورة ثانية → وصفها. رد بالعامية بصيغة المذكر." });
             aiMessages.push({ role: "user", content: userContent });
         } else {
-            selectedModel = "llama-3.1-8b-instant";
             let finalContent;
             if (Array.isArray(userContent)) {
                 finalContent = userContent.filter(c => c.type === "text").map(c => c.text).join(" ");
@@ -762,7 +757,7 @@ client.on('messageCreate', async (message) => {
         for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
             try {
                 const completion = await openai.chat.completions.create({
-                    model: selectedModel,
+                    model: "gemini-2.0-flash",
                     messages: aiMessages,
                     max_tokens: 1500,
                 });
