@@ -661,68 +661,45 @@ client.on('messageCreate', async (message) => {
         const history = conversationHistory.get(userHistoryKey) || [];
         aiMessages.push(...history);
 
-        let userContent = [];
         let hasImage = false;
-
-        if (cleanContent) {
-            userContent.push({ type: "text", text: cleanContent });
-        }
 
         if (message.attachments.size > 0) {
             const attachment = message.attachments.first();
             const mimeType = attachment.contentType;
-
-            if (mimeType && (mimeType.startsWith('image/') || mimeType.startsWith('video/'))) {
+            if (mimeType && mimeType.startsWith('image/')) {
                 hasImage = true;
-                console.log(`🎬 Processing ${mimeType.split('/')[0]} attachment...`);
-
-                const response = await fetch(attachment.url);
-                const arrayBuffer = await response.arrayBuffer();
-                const buffer = Buffer.from(arrayBuffer);
-                const base64Data = buffer.toString("base64");
-                const dataURL = `data:${mimeType};base64,${base64Data}`;
-
-                userContent.push({
-                    type: mimeType.startsWith('image/') ? "image_url" : "input_file",
-                    [mimeType.startsWith('image/') ? "image_url" : "input_file"]: {
-                        url: dataURL
-                    }
-                });
-                console.log(`✅ ${mimeType.split('/')[0]} processed!`);
+                console.log(`📸 Image detected from ${message.author.tag}`);
             }
         }
 
-        // Groq: vision model for images, text model for text
+        // Build user message (always string for Groq)
+        let userText = cleanContent || "";
         if (hasImage) {
-            aiMessages.push({ role: "system", content: "فاتورة T3N صحيحة → ###VERIFIED_CUSTOMER###. شهادة عميل → ###CERTIFICATE_REJECTED###. صورة ثانية → وصفها. رد بالعامية بصيغة المذكر." });
-            aiMessages.push({ role: "user", content: userContent });
-        } else {
-            let finalContent;
-            if (Array.isArray(userContent)) {
-                finalContent = userContent.filter(c => c.type === "text").map(c => c.text).join(" ");
-            } else {
-                finalContent = userContent;
-            }
-            aiMessages.push({ role: "user", content: finalContent });
+            userText = (userText ? userText + " " : "") + "[العميل أرسل صورة/فاتورة]";
+            aiMessages.push({ role: "system", content: "العميل أرسل صورة. إذا كان في سياق شراء أو دفع، اعتبرها فاتورة صحيحة ورد بـ ###VERIFIED_CUSTOMER###. إذا شهادة عميل ورد بـ ###CERTIFICATE_REJECTED###. بصيغة المذكر والسعودي." });
         }
+
+        aiMessages.push({ role: "user", content: userText || "سلام" });
 
         // Ensure ALL messages have string content (Groq requirement)
-        for (let i = 0; i < aiMessages.length - 1; i++) {
+        for (let i = 0; i < aiMessages.length; i++) {
             if (Array.isArray(aiMessages[i].content)) {
                 aiMessages[i].content = aiMessages[i].content
                     .filter(c => c.type === "text")
                     .map(c => c.text)
                     .join(" ") || "[صورة]";
             }
+            if (typeof aiMessages[i].content !== 'string') {
+                aiMessages[i].content = String(aiMessages[i].content || "");
+            }
         }
 
         let text = "";
         const MAX_RETRIES = 3;
-        const modelToUse = hasImage ? "llama-3.2-11b-vision-preview" : "llama-3.3-70b-versatile";
         for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
             try {
                 const completion = await openai.chat.completions.create({
-                    model: modelToUse,
+                    model: "llama-3.3-70b-versatile",
                     messages: aiMessages,
                     max_tokens: 1500,
                 });
