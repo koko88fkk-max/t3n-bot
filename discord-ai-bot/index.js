@@ -357,20 +357,7 @@ client.once('ready', async () => {
         console.error("Control Panel Setup Error:", err.message);
     }
 
-    // --- AUTO-MESSAGE KEEP ALIVE (Visible) ---
-    setInterval(async () => {
-        try {
-            const channel = await client.channels.fetch(AUTO_REPLY_CHANNEL_ID);
-            if (channel) {
-                const msg = await channel.send("🤖 **System Status:** Online & Ready via Render 🟢");
-                // Optional: Delete msg after 5 seconds to reduce spam (User said "let it send", so I'll keep it or delete based on preference. Let's keep it visible for now or delete to be clean).
-                // For now, let's delete it after 10 seconds to keep the chat clean but show activity.
-                setTimeout(() => msg.delete().catch(() => { }), 10000);
-            }
-        } catch (e) {
-            console.error("Auto-Message Error:", e.message);
-        }
-    }, 600000); // Every 10 minutes (600,000 ms)
+
 
     // --- SMART TICKET PANEL REMOVED ---
 
@@ -888,7 +875,9 @@ client.on('messageCreate', async (message) => {
                 await message.reply(`❌ خطأ تقني:\n\`${error.message}\``);
             }
         }
-    });
+    }
+});
+
 
 // --- KEEP ALIVE SERVER ---
 app.get('/', (req, res) => res.send('Bot is Online! 🤖🚀'));
