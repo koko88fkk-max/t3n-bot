@@ -10,7 +10,7 @@ const port = process.env.PORT || 3000;
 
 
 // --- CONFIGURATION ---
-const GEMINI_API_KEY = "AIzaSyBVhIc5tEH3kxzKT71PbG5kIeuozmVZXUE";
+const OPENROUTER_API_KEY = "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";
 // Forced Token (Split to bypass checks)
 const P1 = "MTQ2Mjk3NjY3MzAwNzAxMzkwOA.GFjQkF.";
 const P2 = "XOqEYTpBh-3atIimKdqtCffKwh9f28ubegL4ns";
@@ -238,10 +238,14 @@ const client = new Client({
     partials: [Partials.Channel]
 });
 
-// --- AI SETUP (GOOGLE GEMINI - Paid) ---
+// --- AI SETUP (OPENROUTER) ---
 const openai = new OpenAI({
-    baseURL: "https://generativelanguage.googleapis.com/v1beta/openai/",
-    apiKey: GEMINI_API_KEY,
+    baseURL: "https://openrouter.ai/api/v1",
+    apiKey: OPENROUTER_API_KEY,
+    defaultHeaders: {
+        "HTTP-Referer": "https://github.com/koko88fkk-max/t3n-bot",
+        "X-Title": "T3N Bot"
+    }
 });
 
 const SYSTEM_INSTRUCTION = `أنت بوت خدمة عملاء لمتجر T3N (سبوفر/فك باند ألعاب).
@@ -688,7 +692,7 @@ client.on('messageCreate', async (message) => {
             for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
                 try {
                     const completion = await openai.chat.completions.create({
-                        model: "gemini-2.0-flash",
+                        model: "google/gemini-2.0-flash-001",
                         messages: aiMessages,
                         max_tokens: 1500,
                     });
