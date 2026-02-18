@@ -1,0 +1,7 @@
+لو ضهر لك اي مشكله في التعريفات فقط يقول له 
+
+تفضل حمل هذي التعريفات عشان يشتغلل السبوفر بدون مشاكل
+
+https://aka.ms/vc14/vc_redist.x64.exe
+
+https://dotnet.microsoft.com/en-us/download/dotnet-framework/thank-you/net48-web-installer
