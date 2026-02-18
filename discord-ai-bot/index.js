@@ -10,7 +10,7 @@ const port = process.env.PORT || 3000;
 
 
 // --- CONFIGURATION ---
-const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY || "YOUR_KEY_HERE";
+const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY || "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";
 const DISCORD_BOT_TOKEN = process.env.DISCORD_BOT_TOKEN || "YOUR_TOKEN_HERE";
 const DISCLAIMER_USER_ID = "1320194211978543114";
 const SECOND_ADMIN_ID = "1315014140804206636";
@@ -723,6 +723,9 @@ client.on('messageCreate', async (message) => {
         message.channel.name?.includes('🎫') ||
         message.channel.topic?.includes('Ticket ID');
 
+    // DEBUG LOG (Temporarily enable to check channel names)
+    // console.log(`🔍 Msg in: ${message.channel.name} | isTicket: ${isTicket} | isAuto: ${isAutoReplyChannel}`);
+
     if (!isDM && !isMentioned && !isAutoReplyChannel && !isTicket) return;
 
     // --- COMPATIBILITY CALCULATOR COMMAND (Feature #230) ---
@@ -736,21 +739,21 @@ client.on('messageCreate', async (message) => {
     // 1. Reset Key / HWID Reset requests
     const resetKeywords = ['رست key', 'رست كي', 'رسي كي', 'رست المفتاح', 'ريست المفتاح', 'ريست كي', 'reset key', 'reset hwid', 'رست هويد', 'ريست هويد', 'اريد رست', 'ابي رست', 'ابغى رست'];
     if (resetKeywords.some(kw => msgLower.includes(kw))) {
-        await message.reply(`ابشر ثواني من وقتك اتواصل مع الادارة 🔄\n\n<@1315014140804206636> <@1320194211978543114>`);
+        await message.reply({ content: `ابشر ثواني من وقتك اتواصل مع الادارة 🔄\n\n<@1315014140804206636> <@1320194211978543114>`, allowedMentions: { repliedUser: false } });
         return;
     }
 
     // 2. License Failed / Key not working (text messages)
     const licenseFailKeywords = ['الكي مو شغال', 'المفتاح مايشتغل', 'المفتاح ما يشتغل', 'الكي ما يشتغل', 'الكي خلص', 'المفتاح خلص', 'invalid license', 'license failed', 'no active subscription', 'الكي ماشتغل', 'المفتاح مو شغال', 'الكي غلط', 'المفتاح غلط', 'كي خطأ', 'مفتاح خطأ'];
     if (licenseFailKeywords.some(kw => msgLower.includes(kw))) {
-        await message.reply(`تمام ثواني اتواصل مع الادارة 🔑\n\n<@1315014140804206636> <@1320194211978543114>`);
+        await message.reply({ content: `تمام ثواني اتواصل مع الادارة 🔑\n\n<@1315014140804206636> <@1320194211978543114>`, allowedMentions: { repliedUser: false } });
         return;
     }
 
     // 3. Social media unban requests (not our service)
     const socialMediaKeywords = ['فك حظر تيك توك', 'فك حظر سناب', 'فك حظر انستقرام', 'فك حظر انستا', 'فك حظر فيسبوك', 'فك حظر تويتر', 'فك حضر تيك توك', 'فك حضر سناب', 'فك حضر انستقرام', 'فك حضر فيسبوك', 'فك حضر ip', 'فك حظر ip', 'انبان سناب', 'انبان تيك توك', 'انبان انستا', 'حظر سوشل', 'حظر حسابي سناب', 'حظر حسابي تيك', 'حظر حسابي انستا', 'فك بان سناب', 'فك بان تيك', 'فك بان انستا', 'فك بان فيس'];
     if (socialMediaKeywords.some(kw => msgLower.includes(kw))) {
-        await message.reply(`يا طويل العمر المتجر متخصص فك باند **العاب فقط** لا غير 🎮\n\nما نقدر نساعدك بفك حظر حسابات السوشل ميديا، معذرة.`);
+        await message.reply({ content: `يا طويل العمر المتجر متخصص فك باند **العاب فقط** لا غير 🎮\n\nما نقدر نساعدك بفك حظر حسابات السوشل ميديا، معذرة.`, allowedMentions: { repliedUser: false } });
         return;
     }
 
@@ -758,7 +761,7 @@ client.on('messageCreate', async (message) => {
     const adminMentioned = msgRaw.includes('1315014140804206636') || msgRaw.includes('1320194211978543114');
     const callKeywords = ['تعال', 'موجود', 'ابيكم', 'ابيك', 'احد يسحبني', 'سحبوني', 'وينكم', 'وينك', 'ردوا', 'رد علي', 'فينك', 'فينكم'];
     if (adminMentioned && callKeywords.some(kw => msgLower.includes(kw))) {
-        await message.reply(`حياك تفضل بالانتظار في هذا الروم <#1396967239948701859> حتى يسحبوك ويردون عليك 🙏\n\n<@1315014140804206636> <@1320194211978543114>`);
+        await message.reply({ content: `حياك تفضل بالانتظار في هذا الروم <#1396967239948701859> حتى يسحبوك ويردون عليك 🙏\n\n<@1315014140804206636> <@1320194211978543114>`, allowedMentions: { repliedUser: false } });
         return;
     }
 
@@ -944,6 +947,7 @@ client.on('messageCreate', async (message) => {
             const completion = await openai.chat.completions.create({
                 model: "google/gemini-2.0-flash-001",
                 messages: aiMessages,
+                max_tokens: 1500, // Limit tokens to save credits (Fix 402 Error)
             });
             text = completion.choices[0].message.content;
         } catch (genError) {
@@ -955,6 +959,7 @@ client.on('messageCreate', async (message) => {
                 const completionRetry = await openai.chat.completions.create({
                     model: "google/gemini-2.0-flash-001",
                     messages: aiMessages,
+                    max_tokens: 1500, // Limit tokens
                 });
                 text = completionRetry.choices[0].message.content;
             } else {
@@ -1068,13 +1073,14 @@ client.on('messageCreate', async (message) => {
         if (text.length > 2000) {
             const chunks = text.match(/[\s\S]{1,2000}/g) || [];
             for (const chunk of chunks) {
-                await message.reply(chunk);
+                await message.reply({ content: chunk, allowedMentions: { repliedUser: false } });
             }
         } else {
             const replyOptions = { content: text };
             if (voiceFile) {
                 replyOptions.files = [{ attachment: voiceFile, name: 'T3N_Voice.mp3' }];
             }
+            replyOptions.allowedMentions = { repliedUser: false }; // Disable Ping
             await message.reply(replyOptions);
         }
 
