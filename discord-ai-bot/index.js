@@ -481,7 +481,7 @@ client.on('messageCreate', async (message) => {
                 try {
                     // Send to AI for deep philosophical analysis
                     const safetyCheck = await openai.chat.completions.create({
-                        model: "llama-3.3-70b-versatile",
+                        model: "llama-3.1-8b-instant",
                         messages: [
                             {
                                 role: "system",
@@ -747,7 +747,7 @@ client.on('messageCreate', async (message) => {
             aiMessages.push({ role: "system", content: "فاتورة T3N صحيحة → ###VERIFIED_CUSTOMER###. شهادة عميل → ###CERTIFICATE_REJECTED###. صورة ثانية → وصفها. رد بالعامية بصيغة المذكر." });
             aiMessages.push({ role: "user", content: userContent });
         } else {
-            selectedModel = "llama-3.3-70b-versatile";
+            selectedModel = "llama-3.1-8b-instant";
             let finalContent;
             if (Array.isArray(userContent)) {
                 finalContent = userContent.filter(c => c.type === "text").map(c => c.text).join(" ");
