@@ -475,478 +475,420 @@ client.on('messageCreate', async (message) => {
         const isCommand = message.content.startsWith('!');
         const isAdmin = message.member?.permissions.has('Administrator');
 
-        if (!isCommand && !isAdmin && !message.author.bot && message.content.length > 1) {
-            // We run this asynchronously to not block the bot
-            (async () => {
-                try {
-                    // Send to AI for deep philosophical analysis
-                    const safetyCheck = await openai.chat.completions.create({
-                        model: "gemini-2.0-flash-lite",
-                        messages: [
-                            {
-                                role: "system",
-                                content: `You are a highly intelligent, philosophical moderation AI for a Discord server. 
-                                Your Task: Analyze the following Arabic text deeply. Determine if it contains distinct INSULTS, CURSING, or HATE SPEECH (سب، قذف، شتائم).
-                                
-                                ⚖️ **JUDGMENT RULES:**
-                                - **TOXIC:** Direct insults ('يا كلب', 'يا حمار', 'يا ورع'), cursing, racism, or attacks on dignity.
-                                - **SAFE:** Religious advice ('اتق الله', 'الله يهديك'), constructive criticism, normal conversation, slang that is NOT insulting, or questions.
-                                - **Context Matters:** 'الله يلعن الشيطان' is SAFE. 'الله يلعنك' is TOXIC.
-                                
-                                Output ONLY one word: "TOXIC" or "SAFE".`
-                            },
-                            { role: "user", content: message.content }
-                        ],
-                        temperature: 0,
-                        max_tokens: 10
-                    });
-
-                    const analysisResult = safetyCheck.choices[0].message.content.trim().toUpperCase();
-
-                    if (analysisResult.includes('TOXIC')) {
-                        // Action: Timeout 5 Minutes
-                        await message.delete().catch(() => { });
-
-                        if (message.member && message.member.moderatable) {
-                            await message.member.timeout(5 * 60 * 1000, 'AI Moderation: Insult/Toxic Behavior');
-
-                            // Initial Warning in Chat
-                            const replyMsg = await message.channel.send(`<@${message.author.id}> 🤐 **تم إسكاتك لمدة 5 دقائق.**\nاحترم الموجودين، وتذكر: *"ما يلفظ من قول إلا لديه رقيب عتيد"*`);
-                            setTimeout(() => replyMsg.delete().catch(() => { }), 10000); // Delete warning after 10s
-
-                            // Log to Admin
-                            const adminChannel = await client.channels.fetch(ADMIN_LOG_CHANNEL_ID).catch(() => null);
-                            if (adminChannel) {
-                                const logEmbed = new EmbedBuilder()
-                                    .setTitle('🤐 نظام الحماية - TIMEOUT')
-                                    .setDescription(`**العضو:** ${message.author.tag}\n**السبب:** ألفاظ غير لائقة (AI Detected)\n**الرسالة:** ${message.content}\n**العقوبة:** Timeout 5m`)
-                                    .setColor(0xFFA500)
-                                    .setTimestamp();
-                                await adminChannel.send({ embeds: [logEmbed] });
-                            }
-
-                            // DM User
-                            await message.author.send(`⏳ **تم إعطاؤك تايم آوت (5 دقائق).**\n\nالسبب: استخدام ألفاظ غير لائقة.\nتم رصد المخالفة تلقائياً. المرة القادمة عقوبة أشد.`).catch(() => { });
-                        }
-                    }
-                } catch (e) {
-                    console.error("AI Mod Error:", e);
-                }
-            })();
-        }
-    }
 
 
-    // --- CHANNEL RESTRICTION ---
-    // Bot only responds in: AUTO_REPLY_CHANNEL, Tickets, and DMs
-    const isTicket = message.channel.name?.toLowerCase().includes('ticket') ||
-        message.channel.name?.includes('تذكرة') ||
-        message.channel.name?.includes('🎫') ||
-        message.channel.topic?.includes('Ticket ID');
-
-    // DEBUG LOG (Temporarily enable to check channel names)
-    // console.log(`🔍 Msg in: ${message.channel.name} | isTicket: ${isTicket} | isAuto: ${isAutoReplyChannel}`);
-
-    if (!isDM && !isMentioned && !isAutoReplyChannel && !isTicket) return;
-
-    // --- COMPATIBILITY CALCULATOR COMMAND (Feature #230) ---
-    const msgLower = message.content.toLowerCase().trim();
-    const msgRaw = message.content;
-
-    // =============================================
-    // === SMART AUTO-RESPONSES (No AI needed) ===
-    // =============================================
-
-    // 1. Reset Key / HWID Reset requests
-    const resetKeywords = ['رست key', 'رست كي', 'رسي كي', 'رست المفتاح', 'ريست المفتاح', 'ريست كي', 'reset key', 'reset hwid', 'رست هويد', 'ريست هويد', 'اريد رست', 'ابي رست', 'ابغى رست'];
-    if (resetKeywords.some(kw => msgLower.includes(kw))) {
-        await message.reply({ content: `ابشر ثواني من وقتك اتواصل مع الادارة 🔄\n\n<@1315014140804206636> <@1320194211978543114>`, allowedMentions: { repliedUser: false, parse: ['users'] } });
-        return;
-    }
-
-    // 2. License Failed / Key not working (text messages)
-    const licenseFailKeywords = ['الكي مو شغال', 'المفتاح مايشتغل', 'المفتاح ما يشتغل', 'الكي ما يشتغل', 'الكي خلص', 'المفتاح خلص', 'invalid license', 'license failed', 'no active subscription', 'الكي ماشتغل', 'المفتاح مو شغال', 'الكي غلط', 'المفتاح غلط', 'كي خطأ', 'مفتاح خطأ'];
-    if (licenseFailKeywords.some(kw => msgLower.includes(kw))) {
-        await message.reply({ content: `تمام ثواني اتواصل مع الادارة 🔑\n\n<@1315014140804206636> <@1320194211978543114>`, allowedMentions: { repliedUser: false, parse: ['users'] } });
-        return;
-    }
-
-    // 3. Social media unban requests (not our service)
-    const socialMediaKeywords = ['فك حظر تيك توك', 'فك حظر سناب', 'فك حظر انستقرام', 'فك حظر انستا', 'فك حظر فيسبوك', 'فك حظر تويتر', 'فك حضر تيك توك', 'فك حضر سناب', 'فك حضر انستقرام', 'فك حضر فيسبوك', 'فك حضر ip', 'فك حظر ip', 'انبان سناب', 'انبان تيك توك', 'انبان انستا', 'حظر سوشل', 'حظر حسابي سناب', 'حظر حسابي تيك', 'حظر حسابي انستا', 'فك بان سناب', 'فك بان تيك', 'فك بان انستا', 'فك بان فيس'];
-    if (socialMediaKeywords.some(kw => msgLower.includes(kw))) {
-        await message.reply({ content: `يا طويل العمر المتجر متخصص فك باند **العاب فقط** لا غير 🎮\n\nما نقدر نساعدك بفك حظر حسابات السوشل ميديا، معذرة.`, allowedMentions: { repliedUser: false } });
-        return;
-    }
-
-    // 4. Admin mention + "come help" (someone tagging admins asking for help)
-    const adminMentioned = msgRaw.includes('1315014140804206636') || msgRaw.includes('1320194211978543114');
-    const callKeywords = ['تعال', 'موجود', 'ابيكم', 'ابيك', 'احد يسحبني', 'سحبوني', 'وينكم', 'وينك', 'ردوا', 'رد علي', 'فينك', 'فينكم'];
-    if (adminMentioned && callKeywords.some(kw => msgLower.includes(kw))) {
-        await message.reply({ content: `حياك تفضل بالانتظار في هذا الروم <#1396967239948701859> حتى يسحبوك ويردون عليك 🙏\n\n<@1315014140804206636> <@1320194211978543114>`, allowedMentions: { repliedUser: false, parse: ['users'] } });
-        return;
-    }
 
 
-    if (msgLower === '!توافق' || msgLower === '!فحص' || msgLower === '!منتج' || msgLower === '!check') {
-        const calcEmbed = new EmbedBuilder()
-            .setTitle('🎯 حاسبة التوافق الذكية - T3N')
-            .setDescription(
-                '**أهلاً! خلني أساعدك تلقى المنتج المثالي لك!** 🤖\n\n' +
-                '🎮 **اختر اللعبة اللي متبند فيها:**\n\n' +
-                'بعد ما تختار، بعطيك:\n' +
-                '• ✅ المنتج المناسب بالضبط\n' +
-                '• 💰 السعر\n' +
-                '• 📋 المتطلبات\n' +
-                '• 🔗 رابط الشراء المباشر'
-            )
-            .setColor(0x5865F2)
-            .setFooter({ text: 'T3N Store - Smart Compatibility Calculator' })
-            .setTimestamp();
+        // --- CHANNEL RESTRICTION ---
+        // Bot only responds in: AUTO_REPLY_CHANNEL, Tickets, and DMs
+        const isTicket = message.channel.name?.toLowerCase().includes('ticket') ||
+            message.channel.name?.includes('تذكرة') ||
+            message.channel.name?.includes('🎫') ||
+            message.channel.topic?.includes('Ticket ID');
 
-        const gameRow = new ActionRowBuilder()
-            .addComponents(
-                new ButtonBuilder()
-                    .setCustomId('calc_fortnite')
-                    .setLabel('🎮 فورتنايت')
-                    .setStyle(ButtonStyle.Primary),
-                new ButtonBuilder()
-                    .setCustomId('calc_cod')
-                    .setLabel('🔫 كود (CoD)')
-                    .setStyle(ButtonStyle.Primary),
-                new ButtonBuilder()
-                    .setCustomId('calc_valorant')
-                    .setLabel('🎯 فالورانت')
-                    .setStyle(ButtonStyle.Primary),
-                new ButtonBuilder()
-                    .setCustomId('calc_apex')
-                    .setLabel('🦊 أبكس')
-                    .setStyle(ButtonStyle.Primary),
-                new ButtonBuilder()
-                    .setCustomId('calc_other')
-                    .setLabel('🎲 لعبة ثانية')
-                    .setStyle(ButtonStyle.Secondary),
-            );
+        // DEBUG LOG (Temporarily enable to check channel names)
+        // console.log(`🔍 Msg in: ${message.channel.name} | isTicket: ${isTicket} | isAuto: ${isAutoReplyChannel}`);
 
-        await message.reply({ embeds: [calcEmbed], components: [gameRow] });
-        return;
-    }
+        if (!isDM && !isMentioned && !isAutoReplyChannel && !isTicket) return;
 
-    try {
-        console.log(`📩[START] Processing message from ${message.author.tag} `);
-        await message.channel.sendTyping();
+        // --- COMPATIBILITY CALCULATOR COMMAND (Feature #230) ---
+        const msgLower = message.content.toLowerCase().trim();
+        const msgRaw = message.content;
 
-        let cleanContent = message.content.replace(new RegExp(`< @! ? ${client.user?.id}> `, 'g'), '').trim();
-        if (!cleanContent && message.attachments.size === 0) cleanContent = "صِف لي ما في الصورة";
+        // =============================================
+        // === SMART AUTO-RESPONSES (No AI needed) ===
+        // =============================================
 
-        console.log(`🔍 Cleaned: "${cleanContent}"`);
-
-        // --- CHECK IF USER HAS CUSTOMER ROLE (Smart Context) ---
-        let isExistingCustomer = false;
-        if (message.member) {
-            isExistingCustomer = message.member.roles.cache.has(CUSTOMER_ROLE_ID);
+        // 1. Reset Key / HWID Reset requests
+        const resetKeywords = ['رست key', 'رست كي', 'رسي كي', 'رست المفتاح', 'ريست المفتاح', 'ريست كي', 'reset key', 'reset hwid', 'رست هويد', 'ريست هويد', 'اريد رست', 'ابي رست', 'ابغى رست'];
+        if (resetKeywords.some(kw => msgLower.includes(kw))) {
+            await message.reply({ content: `ابشر ثواني من وقتك اتواصل مع الادارة 🔄\n\n<@1315014140804206636> <@1320194211978543114>`, allowedMentions: { repliedUser: false, parse: ['users'] } });
+            return;
         }
 
-        // --- UPDATE USER PROFILE (Feature #121) ---
-        const userProfile = updateUserProfile(message.author.id, message.author.username, isExistingCustomer, cleanContent);
+        // 2. License Failed / Key not working (text messages)
+        const licenseFailKeywords = ['الكي مو شغال', 'المفتاح مايشتغل', 'المفتاح ما يشتغل', 'الكي ما يشتغل', 'الكي خلص', 'المفتاح خلص', 'invalid license', 'license failed', 'no active subscription', 'الكي ماشتغل', 'المفتاح مو شغال', 'الكي غلط', 'المفتاح غلط', 'كي خطأ', 'مفتاح خطأ'];
+        if (licenseFailKeywords.some(kw => msgLower.includes(kw))) {
+            await message.reply({ content: `تمام ثواني اتواصل مع الادارة 🔑\n\n<@1315014140804206636> <@1320194211978543114>`, allowedMentions: { repliedUser: false, parse: ['users'] } });
+            return;
+        }
 
-        // PREPARE MESSAGES ARRAY FOR OPENAI
-        let aiMessages = [
-            { role: "system", content: SYSTEM_INSTRUCTION },
-        ];
+        // 3. Social media unban requests (not our service)
+        const socialMediaKeywords = ['فك حظر تيك توك', 'فك حظر سناب', 'فك حظر انستقرام', 'فك حظر انستا', 'فك حظر فيسبوك', 'فك حظر تويتر', 'فك حضر تيك توك', 'فك حضر سناب', 'فك حضر انستقرام', 'فك حضر فيسبوك', 'فك حضر ip', 'فك حظر ip', 'انبان سناب', 'انبان تيك توك', 'انبان انستا', 'حظر سوشل', 'حظر حسابي سناب', 'حظر حسابي تيك', 'حظر حسابي انستا', 'فك بان سناب', 'فك بان تيك', 'فك بان انستا', 'فك بان فيس'];
+        if (socialMediaKeywords.some(kw => msgLower.includes(kw))) {
+            await message.reply({ content: `يا طويل العمر المتجر متخصص فك باند **العاب فقط** لا غير 🎮\n\nما نقدر نساعدك بفك حظر حسابات السوشل ميديا، معذرة.`, allowedMentions: { repliedUser: false } });
+            return;
+        }
 
-        // Add context about the user
-        if (isExistingCustomer) {
-            aiMessages.push({
-                role: "system",
-                content: `🟢[حالة المستخدم]: هذا المستخدم "${message.author.username}" عنده رتبة "عميل" في السيرفر — يعني هو مشتري سابق وموثوق ✅.
+        // 4. Admin mention + "come help" (someone tagging admins asking for help)
+        const adminMentioned = msgRaw.includes('1315014140804206636') || msgRaw.includes('1320194211978543114');
+        const callKeywords = ['تعال', 'موجود', 'ابيكم', 'ابيك', 'احد يسحبني', 'سحبوني', 'وينكم', 'وينك', 'ردوا', 'رد علي', 'فينك', 'فينكم'];
+        if (adminMentioned && callKeywords.some(kw => msgLower.includes(kw))) {
+            await message.reply({ content: `حياك تفضل بالانتظار في هذا الروم <#1396967239948701859> حتى يسحبوك ويردون عليك 🙏\n\n<@1315014140804206636> <@1320194211978543114>`, allowedMentions: { repliedUser: false, parse: ['users'] } });
+            return;
+        }
+
+
+        if (msgLower === '!توافق' || msgLower === '!فحص' || msgLower === '!منتج' || msgLower === '!check') {
+            const calcEmbed = new EmbedBuilder()
+                .setTitle('🎯 حاسبة التوافق الذكية - T3N')
+                .setDescription(
+                    '**أهلاً! خلني أساعدك تلقى المنتج المثالي لك!** 🤖\n\n' +
+                    '🎮 **اختر اللعبة اللي متبند فيها:**\n\n' +
+                    'بعد ما تختار، بعطيك:\n' +
+                    '• ✅ المنتج المناسب بالضبط\n' +
+                    '• 💰 السعر\n' +
+                    '• 📋 المتطلبات\n' +
+                    '• 🔗 رابط الشراء المباشر'
+                )
+                .setColor(0x5865F2)
+                .setFooter({ text: 'T3N Store - Smart Compatibility Calculator' })
+                .setTimestamp();
+
+            const gameRow = new ActionRowBuilder()
+                .addComponents(
+                    new ButtonBuilder()
+                        .setCustomId('calc_fortnite')
+                        .setLabel('🎮 فورتنايت')
+                        .setStyle(ButtonStyle.Primary),
+                    new ButtonBuilder()
+                        .setCustomId('calc_cod')
+                        .setLabel('🔫 كود (CoD)')
+                        .setStyle(ButtonStyle.Primary),
+                    new ButtonBuilder()
+                        .setCustomId('calc_valorant')
+                        .setLabel('🎯 فالورانت')
+                        .setStyle(ButtonStyle.Primary),
+                    new ButtonBuilder()
+                        .setCustomId('calc_apex')
+                        .setLabel('🦊 أبكس')
+                        .setStyle(ButtonStyle.Primary),
+                    new ButtonBuilder()
+                        .setCustomId('calc_other')
+                        .setLabel('🎲 لعبة ثانية')
+                        .setStyle(ButtonStyle.Secondary),
+                );
+
+            await message.reply({ embeds: [calcEmbed], components: [gameRow] });
+            return;
+        }
+
+        try {
+            console.log(`📩[START] Processing message from ${message.author.tag} `);
+            await message.channel.sendTyping();
+
+            let cleanContent = message.content.replace(new RegExp(`< @! ? ${client.user?.id}> `, 'g'), '').trim();
+            if (!cleanContent && message.attachments.size === 0) cleanContent = "صِف لي ما في الصورة";
+
+            console.log(`🔍 Cleaned: "${cleanContent}"`);
+
+            // --- CHECK IF USER HAS CUSTOMER ROLE (Smart Context) ---
+            let isExistingCustomer = false;
+            if (message.member) {
+                isExistingCustomer = message.member.roles.cache.has(CUSTOMER_ROLE_ID);
+            }
+
+            // --- UPDATE USER PROFILE (Feature #121) ---
+            const userProfile = updateUserProfile(message.author.id, message.author.username, isExistingCustomer, cleanContent);
+
+            // PREPARE MESSAGES ARRAY FOR OPENAI
+            let aiMessages = [
+                { role: "system", content: SYSTEM_INSTRUCTION },
+            ];
+
+            // Add context about the user
+            if (isExistingCustomer) {
+                aiMessages.push({
+                    role: "system",
+                    content: `🟢[حالة المستخدم]: هذا المستخدم "${message.author.username}" عنده رتبة "عميل" في السيرفر — يعني هو مشتري سابق وموثوق ✅.
                 المطلوب منك:
     1. رحب فيه بحرارة: "يا هلا والله بعميلنا الغالي! 😍"
     2. اسأله مباشرة كيف تقدر تساعده: "بشر عسى أمورك طيبة؟ واجهتك أي مشكلة في السبوفر؟"
     3. إذا اشتكى من مشكلة: ابدأ في حلها فوراً(خطوة بخطوة) ولا تطلب منه أي إثبات أو فاتورة نهائياً.
                 4. خلك صبور جداً معه ومساعد لأبعد حد.`
-            });
-        } else {
-            aiMessages.push({
-                role: "system",
-                content: `🔴[حالة المستخدم]: هذا المستخدم "${message.author.username}" ما عنده رتبة "عميل" — يعني هو زبون جديد ما اشترى بعد.هدفك تقنعه يشتري.كن حماسي واعرض المنتجات بشكل جذاب.إذا قال "شريت" أو "دفعت" اطلب منه صورة الفاتورة فوراً.`
-            });
-        }
-
-        // --- INJECT LONG-TERM MEMORY (Feature #121) ---
-        if (userProfile && userProfile.totalMessages > 1) {
-            let memoryContext = `📋[ذاكرة طويلة المدى - هذا العميل تكلمنا معه قبل]: \n`;
-            memoryContext += `- الاسم: ${userProfile.username} \n`;
-            memoryContext += `- أول ظهور: ${new Date(userProfile.firstSeen).toLocaleDateString('ar-SA')} \n`;
-            memoryContext += `- عدد رسائله الكلي: ${userProfile.totalMessages} \n`;
-
-            if (userProfile.purchaseHistory.length > 0) {
-                memoryContext += `- سجل الشراء: ${userProfile.purchaseHistory.slice(-3).join(' | ')} \n`;
-            }
-            if (userProfile.issueHistory.length > 0) {
-                memoryContext += `- مشاكل سابقة: ${userProfile.issueHistory.slice(-3).join(' | ')} \n`;
-            }
-            if (userProfile.recentTopics.length > 0) {
-                memoryContext += `- مواضيع اهتمامه: ${userProfile.recentTopics.join(', ')} \n`;
-            }
-
-            memoryContext += `\nاستخدم هذي المعلومات عشان تخدمه بشكل شخصي.مثلاً: "أشوفك سألت عن فورتنايت قبل" أو "مرحبا مرة ثانية!"`;
-
-            aiMessages.push({ role: "system", content: memoryContext });
-        }
-
-        // --- INJECT CONVERSATION SUMMARY (Feature #62) ---
-        const convSummary = getUserConversationSummary(message.author.id);
-        if (convSummary) {
-            aiMessages.push({
-                role: "system",
-                content: `📝[ملخص محادثات سابقة مع هذا العميل]: \n${convSummary} \n\nاستخدم هذا السياق لتقديم خدمة أفضل.لا تكرر نفس المعلومات إلا إذا طلبها.`
-            });
-        }
-
-
-        // --- Add USER-based history (Feature #180: Multi-conversation tracking) ---
-        const userHistoryKey = message.author.id; // Per-user, not per-channel!
-        const history = conversationHistory.get(userHistoryKey) || [];
-        aiMessages.push(...history);
-
-        let userContent = [];
-        let hasImage = false;
-
-        if (cleanContent) {
-            userContent.push({ type: "text", text: cleanContent });
-        }
-
-        if (message.attachments.size > 0) {
-            const attachment = message.attachments.first();
-            const mimeType = attachment.contentType;
-
-            if (mimeType && (mimeType.startsWith('image/') || mimeType.startsWith('video/'))) {
-                hasImage = true;
-                console.log(`🎬 Processing ${mimeType.split('/')[0]} attachment...`);
-
-                const response = await fetch(attachment.url);
-                const arrayBuffer = await response.arrayBuffer();
-                const buffer = Buffer.from(arrayBuffer);
-                const base64Data = buffer.toString("base64");
-                const dataURL = `data:${mimeType};base64,${base64Data}`;
-
-                userContent.push({
-                    type: mimeType.startsWith('image/') ? "image_url" : "input_file",
-                    [mimeType.startsWith('image/') ? "image_url" : "input_file"]: {
-                        url: dataURL
-                    }
                 });
-                console.log(`✅ ${mimeType.split('/')[0]} processed!`);
-            }
-        }
-
-        // Gemini supports text + vision natively
-        if (hasImage) {
-            aiMessages.push({ role: "system", content: "فاتورة T3N صحيحة → ###VERIFIED_CUSTOMER###. شهادة عميل → ###CERTIFICATE_REJECTED###. صورة ثانية → وصفها. رد بالعامية بصيغة المذكر." });
-            aiMessages.push({ role: "user", content: userContent });
-        } else {
-            let finalContent;
-            if (Array.isArray(userContent)) {
-                finalContent = userContent.filter(c => c.type === "text").map(c => c.text).join(" ");
             } else {
-                finalContent = userContent;
-            }
-            aiMessages.push({ role: "user", content: finalContent });
-        }
-
-        let text = "";
-        const MAX_RETRIES = 3;
-        for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
-            try {
-                const completion = await openai.chat.completions.create({
-                    model: "gemini-2.0-flash",
-                    messages: aiMessages,
-                    max_tokens: 1500,
-                });
-                text = completion.choices[0].message.content;
-                break; // Success, exit loop
-            } catch (genError) {
-                const isRetryable = genError.status === 429 || genError.status === 400 || genError.status === 503 || (genError.message && (genError.message.includes("429") || genError.message.includes("400")));
-                if (isRetryable && attempt < MAX_RETRIES) {
-                    const waitTime = (attempt + 1) * 3000;
-                    console.log(`⚠️ Error ${genError.status}, retry ${attempt + 1}/${MAX_RETRIES} in ${waitTime / 1000}s...`);
-                    await new Promise(resolve => setTimeout(resolve, waitTime));
-                } else {
-                    throw genError;
-                }
-            }
-        }
-
-        // --- VERIFIED CUSTOMER LOGIC ---
-        // 1. Rejected Certificate (Feature #UserRequest)
-        if (text.includes("###CERTIFICATE_REJECTED###")) {
-            await message.reply({
-                content: "⛔ **هذي شهادة شكر وليست إيصال دفع!** 😅\n\nعشان تاخذ الرتبة وتوثق شراك، لازم ترسل صورة **إيصال التحويل** أو **رسالة الدفع** (من البنك أو سلة).\nالشهادة هذي للزينة بس! 📜✨"
-            });
-            return;
-        }
-
-        // 2. Valid Receipt
-        if (text.includes("###VERIFIED_CUSTOMER###") && hasImage) {
-            if (!message.guild) {
-                text = "✅ **تم التحقق من الفاتورة!**\nعذراً، لا أستطيع إعطاء الرتبة هنا في الخاص. يرجى إرسال الصورة في السيرفر أو التذكرة للحصول على الرتبة تلقائياً.";
-            } else {
-                try {
-                    const role = message.guild.roles.cache.get(CUSTOMER_ROLE_ID);
-                    if (role) {
-                        await message.member.roles.add(role);
-                        await message.reply({
-                            content: `✅ ** تم تأكيد عملية الشراء! مبروك يا وحش ** 🎉\nتفضل، تم تفعيل رتبة العميل لك.\n\n📂 ** رومات الشرح والتحميل:**\nhttps://discord.com/channels/1396959491786018826/1462562450502320170\nhttps://discord.com/channels/1396959491786018826/1462608106570780722\n\n⭐ **لا تنسى تقيمنا ياشيخ:**\nhttps://mtjr.at/UB3_WiH045\n(اكتب الخدمة اللي تشوفها يا قلب)\n\n📸 **وبعد فك الباند قيم هنا بصورة ومنشني وكلام عسل زيك:**\nhttps://discord.com/channels/1396959491786018826/1397221014215331891`
-                        });
-                        console.log(`✅ Role given to ${message.author.tag}`);
-
-                        // --- GENERATE CUSTOMER CERTIFICATE (Feature #282) ---
-                        try {
-                            const certNumber = String(Date.now()).slice(-6);
-                            const logoFile = path.join(__dirname, 'assets', 'logo.png');
-                            const certBuffer = await generateCertificate({
-                                customerName: message.author.username,
-                                customerId: message.author.id,
-                                productName: 'T3N Spoofer',
-                                ticketName: message.channel.name || 'Direct',
-                                certificateNumber: certNumber,
-                                logoPath: fs.existsSync(logoFile) ? logoFile : null,
-                            });
-
-                            // Send certificate as DM
-                            const { AttachmentBuilder } = require('discord.js');
-                            const certAttachment = new AttachmentBuilder(certBuffer, { name: `T3N-Certificate-${certNumber}.png` });
-
-                            await message.author.send({
-                                content: `📜 **شهادة عميل معتمد — T3N Store**\n\nمبروك يا بطل! 🎉 هذي شهادتك الرسمية كعميل معتمد في متجر T3N.\nاحتفظ فيها وشاركها مع ربعك! 💎\n\n🔢 رقم الشهادة: **#T3N-${certNumber}**`,
-                                files: [certAttachment]
-                            });
-                            console.log(`📜 Certificate sent to ${message.author.tag} (#T3N-${certNumber})`);
-                        } catch (certError) {
-                            console.error('Certificate generation error:', certError.message);
-                            // Non-critical: don't block the flow if certificate fails
-                        }
-
-                        logToWebhook(message.author, "[Receipt Verified]", "Role Given + Links Sent + Certificate");
-                        return;
-                    } else {
-                        console.error("❌ Role ID not found in cache!");
-                        text = "تم التحقق من الفاتورة، لكن لم أجد الرتبة في السيرفر. (يرجى التأكد من الـ Role ID).";
-                    }
-                } catch (roleError) {
-                    console.error("❌ Error giving role:", roleError.message);
-                    text = "تم التحقق، لكن حدث خطأ أثناء إعطاء الرتبة.\n⚠️ **تأكد من وضع رتبة البوت فوق رتبة العميل في إعدادات السيرفر!**";
-                }
-            }
-        }
-
-        if (!text) text = "عذراً، لم أستطع توليد رد.";
-
-        // --- HANDLE VOICE RESPONSE ---
-        let voiceFile = null;
-        if (text.includes("###SEND_VOICE###")) {
-            console.log("🎙️ Generating voice message...");
-            const cleanTextForVoice = text.replace("###SEND_VOICE###", "").replace(/[*_#]/g, "").substring(0, 200);
-            const url = googleTTS.getAudioUrl(cleanTextForVoice, {
-                lang: 'ar',
-                slow: false,
-                host: 'https://translate.google.com',
-            });
-            text = text.replace("###SEND_VOICE###", "").trim();
-        }
-
-
-
-        // --- HANDLE ADMIN ALERT ---
-        if (text.includes("###ADMIN_ALERT###")) {
-            console.log("🚨 Admin alert triggered!");
-            const adminChannel = await client.channels.fetch(ADMIN_LOG_CHANNEL_ID);
-            if (adminChannel) {
-                const alertEmbed = new EmbedBuilder()
-                    .setTitle('🚨 مشلوط في الصندقه يحتاج تدخل بشري')
-                    .setColor(0xFF0000)
-                    .addFields(
-                        { name: '👤 المستخدم', value: `${message.author.tag} (${message.author.id})` },
-                        { name: '📍 الروم / التكت', value: `<#${message.channel.id}>` },
-                        { name: '💬 المحتوى', value: cleanContent || "بدون نص" }
-                    )
-                    .setTimestamp();
-                await adminChannel.send({
-                    content: `<@${DISCLAIMER_USER_ID}> <@${SECOND_ADMIN_ID}> فيه عميل "مشلوط" يحتاج فزعتكم هنا! تكت: <#${message.channel.id}>`,
-                    embeds: [alertEmbed]
-                });
-            }
-            text = text.replace("###ADMIN_ALERT###", "").trim();
-        }
-
-        // --- SEND RESPONSE ---
-        if (text.length > 2000) {
-            const chunks = text.match(/[\s\S]{1,2000}/g) || [];
-            for (const chunk of chunks) {
-                await message.reply({ content: chunk, allowedMentions: { repliedUser: false } });
-            }
-        } else {
-            const replyOptions = { content: text };
-            if (voiceFile) {
-                replyOptions.files = [{ attachment: voiceFile, name: 'T3N_Voice.mp3' }];
-            }
-            replyOptions.allowedMentions = { repliedUser: false }; // Disable Ping
-            await message.reply(replyOptions);
-        }
-
-        // --- UPDATE USER HISTORY (Feature #180: Per-user tracking) ---
-        // userHistoryKey already declared above
-        const currentHistory = conversationHistory.get(userHistoryKey) || [];
-
-        // Add current exchange
-        currentHistory.push({ role: "user", content: cleanContent });
-        currentHistory.push({ role: "assistant", content: text });
-
-        // Smart compression: if history is too long, compress oldest messages into a summary
-        if (currentHistory.length > MAX_HISTORY) {
-            // Take the oldest messages and compress them into a summary
-            const oldMessages = currentHistory.slice(0, currentHistory.length - MAX_HISTORY);
-            const recentMessages = currentHistory.slice(-MAX_HISTORY);
-
-            // Build a compressed summary of old messages
-            const oldUserMsgs = oldMessages.filter(m => m.role === 'user').map(m => {
-                const content = typeof m.content === 'string' ? m.content : 'رسالة';
-                return content.substring(0, 60);
-            });
-
-            if (oldUserMsgs.length > 0) {
-                const compressionNote = {
+                aiMessages.push({
                     role: "system",
-                    content: `📎 [ملخص مضغوط لرسائل سابقة من هذا العميل]: ${oldUserMsgs.slice(-MAX_COMPRESSED_SUMMARY).join(' | ')}`
-                };
-                conversationHistory.set(userHistoryKey, [compressionNote, ...recentMessages]);
-            } else {
-                conversationHistory.set(userHistoryKey, recentMessages);
+                    content: `🔴[حالة المستخدم]: هذا المستخدم "${message.author.username}" ما عنده رتبة "عميل" — يعني هو زبون جديد ما اشترى بعد.هدفك تقنعه يشتري.كن حماسي واعرض المنتجات بشكل جذاب.إذا قال "شريت" أو "دفعت" اطلب منه صورة الفاتورة فوراً.`
+                });
             }
-        } else {
-            conversationHistory.set(userHistoryKey, currentHistory);
+
+            // --- INJECT LONG-TERM MEMORY (Feature #121) ---
+            if (userProfile && userProfile.totalMessages > 1) {
+                let memoryContext = `📋[ذاكرة طويلة المدى - هذا العميل تكلمنا معه قبل]: \n`;
+                memoryContext += `- الاسم: ${userProfile.username} \n`;
+                memoryContext += `- أول ظهور: ${new Date(userProfile.firstSeen).toLocaleDateString('ar-SA')} \n`;
+                memoryContext += `- عدد رسائله الكلي: ${userProfile.totalMessages} \n`;
+
+                if (userProfile.purchaseHistory.length > 0) {
+                    memoryContext += `- سجل الشراء: ${userProfile.purchaseHistory.slice(-3).join(' | ')} \n`;
+                }
+                if (userProfile.issueHistory.length > 0) {
+                    memoryContext += `- مشاكل سابقة: ${userProfile.issueHistory.slice(-3).join(' | ')} \n`;
+                }
+                if (userProfile.recentTopics.length > 0) {
+                    memoryContext += `- مواضيع اهتمامه: ${userProfile.recentTopics.join(', ')} \n`;
+                }
+
+                memoryContext += `\nاستخدم هذي المعلومات عشان تخدمه بشكل شخصي.مثلاً: "أشوفك سألت عن فورتنايت قبل" أو "مرحبا مرة ثانية!"`;
+
+                aiMessages.push({ role: "system", content: memoryContext });
+            }
+
+            // --- INJECT CONVERSATION SUMMARY (Feature #62) ---
+            const convSummary = getUserConversationSummary(message.author.id);
+            if (convSummary) {
+                aiMessages.push({
+                    role: "system",
+                    content: `📝[ملخص محادثات سابقة مع هذا العميل]: \n${convSummary} \n\nاستخدم هذا السياق لتقديم خدمة أفضل.لا تكرر نفس المعلومات إلا إذا طلبها.`
+                });
+            }
+
+
+            // --- Add USER-based history (Feature #180: Multi-conversation tracking) ---
+            const userHistoryKey = message.author.id; // Per-user, not per-channel!
+            const history = conversationHistory.get(userHistoryKey) || [];
+            aiMessages.push(...history);
+
+            let userContent = [];
+            let hasImage = false;
+
+            if (cleanContent) {
+                userContent.push({ type: "text", text: cleanContent });
+            }
+
+            if (message.attachments.size > 0) {
+                const attachment = message.attachments.first();
+                const mimeType = attachment.contentType;
+
+                if (mimeType && (mimeType.startsWith('image/') || mimeType.startsWith('video/'))) {
+                    hasImage = true;
+                    console.log(`🎬 Processing ${mimeType.split('/')[0]} attachment...`);
+
+                    const response = await fetch(attachment.url);
+                    const arrayBuffer = await response.arrayBuffer();
+                    const buffer = Buffer.from(arrayBuffer);
+                    const base64Data = buffer.toString("base64");
+                    const dataURL = `data:${mimeType};base64,${base64Data}`;
+
+                    userContent.push({
+                        type: mimeType.startsWith('image/') ? "image_url" : "input_file",
+                        [mimeType.startsWith('image/') ? "image_url" : "input_file"]: {
+                            url: dataURL
+                        }
+                    });
+                    console.log(`✅ ${mimeType.split('/')[0]} processed!`);
+                }
+            }
+
+            // Gemini supports text + vision natively
+            if (hasImage) {
+                aiMessages.push({ role: "system", content: "فاتورة T3N صحيحة → ###VERIFIED_CUSTOMER###. شهادة عميل → ###CERTIFICATE_REJECTED###. صورة ثانية → وصفها. رد بالعامية بصيغة المذكر." });
+                aiMessages.push({ role: "user", content: userContent });
+            } else {
+                let finalContent;
+                if (Array.isArray(userContent)) {
+                    finalContent = userContent.filter(c => c.type === "text").map(c => c.text).join(" ");
+                } else {
+                    finalContent = userContent;
+                }
+                aiMessages.push({ role: "user", content: finalContent });
+            }
+
+            let text = "";
+            const MAX_RETRIES = 3;
+            for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+                try {
+                    const completion = await openai.chat.completions.create({
+                        model: "gemini-2.0-flash",
+                        messages: aiMessages,
+                        max_tokens: 1500,
+                    });
+                    text = completion.choices[0].message.content;
+                    break; // Success, exit loop
+                } catch (genError) {
+                    const isRetryable = genError.status === 429 || genError.status === 400 || genError.status === 503 || (genError.message && (genError.message.includes("429") || genError.message.includes("400")));
+                    if (isRetryable && attempt < MAX_RETRIES) {
+                        const waitTime = (attempt + 1) * 3000;
+                        console.log(`⚠️ Error ${genError.status}, retry ${attempt + 1}/${MAX_RETRIES} in ${waitTime / 1000}s...`);
+                        await new Promise(resolve => setTimeout(resolve, waitTime));
+                    } else {
+                        throw genError;
+                    }
+                }
+            }
+
+            // --- VERIFIED CUSTOMER LOGIC ---
+            // 1. Rejected Certificate (Feature #UserRequest)
+            if (text.includes("###CERTIFICATE_REJECTED###")) {
+                await message.reply({
+                    content: "⛔ **هذي شهادة شكر وليست إيصال دفع!** 😅\n\nعشان تاخذ الرتبة وتوثق شراك، لازم ترسل صورة **إيصال التحويل** أو **رسالة الدفع** (من البنك أو سلة).\nالشهادة هذي للزينة بس! 📜✨"
+                });
+                return;
+            }
+
+            // 2. Valid Receipt
+            if (text.includes("###VERIFIED_CUSTOMER###") && hasImage) {
+                if (!message.guild) {
+                    text = "✅ **تم التحقق من الفاتورة!**\nعذراً، لا أستطيع إعطاء الرتبة هنا في الخاص. يرجى إرسال الصورة في السيرفر أو التذكرة للحصول على الرتبة تلقائياً.";
+                } else {
+                    try {
+                        const role = message.guild.roles.cache.get(CUSTOMER_ROLE_ID);
+                        if (role) {
+                            await message.member.roles.add(role);
+                            await message.reply({
+                                content: `✅ ** تم تأكيد عملية الشراء! مبروك يا وحش ** 🎉\nتفضل، تم تفعيل رتبة العميل لك.\n\n📂 ** رومات الشرح والتحميل:**\nhttps://discord.com/channels/1396959491786018826/1462562450502320170\nhttps://discord.com/channels/1396959491786018826/1462608106570780722\n\n⭐ **لا تنسى تقيمنا ياشيخ:**\nhttps://mtjr.at/UB3_WiH045\n(اكتب الخدمة اللي تشوفها يا قلب)\n\n📸 **وبعد فك الباند قيم هنا بصورة ومنشني وكلام عسل زيك:**\nhttps://discord.com/channels/1396959491786018826/1397221014215331891`
+                            });
+                            console.log(`✅ Role given to ${message.author.tag}`);
+
+                            // --- GENERATE CUSTOMER CERTIFICATE (Feature #282) ---
+                            try {
+                                const certNumber = String(Date.now()).slice(-6);
+                                const logoFile = path.join(__dirname, 'assets', 'logo.png');
+                                const certBuffer = await generateCertificate({
+                                    customerName: message.author.username,
+                                    customerId: message.author.id,
+                                    productName: 'T3N Spoofer',
+                                    ticketName: message.channel.name || 'Direct',
+                                    certificateNumber: certNumber,
+                                    logoPath: fs.existsSync(logoFile) ? logoFile : null,
+                                });
+
+                                // Send certificate as DM
+                                const { AttachmentBuilder } = require('discord.js');
+                                const certAttachment = new AttachmentBuilder(certBuffer, { name: `T3N-Certificate-${certNumber}.png` });
+
+                                await message.author.send({
+                                    content: `📜 **شهادة عميل معتمد — T3N Store**\n\nمبروك يا بطل! 🎉 هذي شهادتك الرسمية كعميل معتمد في متجر T3N.\nاحتفظ فيها وشاركها مع ربعك! 💎\n\n🔢 رقم الشهادة: **#T3N-${certNumber}**`,
+                                    files: [certAttachment]
+                                });
+                                console.log(`📜 Certificate sent to ${message.author.tag} (#T3N-${certNumber})`);
+                            } catch (certError) {
+                                console.error('Certificate generation error:', certError.message);
+                                // Non-critical: don't block the flow if certificate fails
+                            }
+
+                            logToWebhook(message.author, "[Receipt Verified]", "Role Given + Links Sent + Certificate");
+                            return;
+                        } else {
+                            console.error("❌ Role ID not found in cache!");
+                            text = "تم التحقق من الفاتورة، لكن لم أجد الرتبة في السيرفر. (يرجى التأكد من الـ Role ID).";
+                        }
+                    } catch (roleError) {
+                        console.error("❌ Error giving role:", roleError.message);
+                        text = "تم التحقق، لكن حدث خطأ أثناء إعطاء الرتبة.\n⚠️ **تأكد من وضع رتبة البوت فوق رتبة العميل في إعدادات السيرفر!**";
+                    }
+                }
+            }
+
+            if (!text) text = "عذراً، لم أستطع توليد رد.";
+
+            // --- HANDLE VOICE RESPONSE ---
+            let voiceFile = null;
+            if (text.includes("###SEND_VOICE###")) {
+                console.log("🎙️ Generating voice message...");
+                const cleanTextForVoice = text.replace("###SEND_VOICE###", "").replace(/[*_#]/g, "").substring(0, 200);
+                const url = googleTTS.getAudioUrl(cleanTextForVoice, {
+                    lang: 'ar',
+                    slow: false,
+                    host: 'https://translate.google.com',
+                });
+                text = text.replace("###SEND_VOICE###", "").trim();
+            }
+
+
+
+            // --- HANDLE ADMIN ALERT ---
+            if (text.includes("###ADMIN_ALERT###")) {
+                console.log("🚨 Admin alert triggered!");
+                const adminChannel = await client.channels.fetch(ADMIN_LOG_CHANNEL_ID);
+                if (adminChannel) {
+                    const alertEmbed = new EmbedBuilder()
+                        .setTitle('🚨 مشلوط في الصندقه يحتاج تدخل بشري')
+                        .setColor(0xFF0000)
+                        .addFields(
+                            { name: '👤 المستخدم', value: `${message.author.tag} (${message.author.id})` },
+                            { name: '📍 الروم / التكت', value: `<#${message.channel.id}>` },
+                            { name: '💬 المحتوى', value: cleanContent || "بدون نص" }
+                        )
+                        .setTimestamp();
+                    await adminChannel.send({
+                        content: `<@${DISCLAIMER_USER_ID}> <@${SECOND_ADMIN_ID}> فيه عميل "مشلوط" يحتاج فزعتكم هنا! تكت: <#${message.channel.id}>`,
+                        embeds: [alertEmbed]
+                    });
+                }
+                text = text.replace("###ADMIN_ALERT###", "").trim();
+            }
+
+            // --- SEND RESPONSE ---
+            if (text.length > 2000) {
+                const chunks = text.match(/[\s\S]{1,2000}/g) || [];
+                for (const chunk of chunks) {
+                    await message.reply({ content: chunk, allowedMentions: { repliedUser: false } });
+                }
+            } else {
+                const replyOptions = { content: text };
+                if (voiceFile) {
+                    replyOptions.files = [{ attachment: voiceFile, name: 'T3N_Voice.mp3' }];
+                }
+                replyOptions.allowedMentions = { repliedUser: false }; // Disable Ping
+                await message.reply(replyOptions);
+            }
+
+            // --- UPDATE USER HISTORY (Feature #180: Per-user tracking) ---
+            // userHistoryKey already declared above
+            const currentHistory = conversationHistory.get(userHistoryKey) || [];
+
+            // Add current exchange
+            currentHistory.push({ role: "user", content: cleanContent });
+            currentHistory.push({ role: "assistant", content: text });
+
+            // Smart compression: if history is too long, compress oldest messages into a summary
+            if (currentHistory.length > MAX_HISTORY) {
+                // Take the oldest messages and compress them into a summary
+                const oldMessages = currentHistory.slice(0, currentHistory.length - MAX_HISTORY);
+                const recentMessages = currentHistory.slice(-MAX_HISTORY);
+
+                // Build a compressed summary of old messages
+                const oldUserMsgs = oldMessages.filter(m => m.role === 'user').map(m => {
+                    const content = typeof m.content === 'string' ? m.content : 'رسالة';
+                    return content.substring(0, 60);
+                });
+
+                if (oldUserMsgs.length > 0) {
+                    const compressionNote = {
+                        role: "system",
+                        content: `📎 [ملخص مضغوط لرسائل سابقة من هذا العميل]: ${oldUserMsgs.slice(-MAX_COMPRESSED_SUMMARY).join(' | ')}`
+                    };
+                    conversationHistory.set(userHistoryKey, [compressionNote, ...recentMessages]);
+                } else {
+                    conversationHistory.set(userHistoryKey, recentMessages);
+                }
+            } else {
+                conversationHistory.set(userHistoryKey, currentHistory);
+            }
+
+            // --- LOG CONVERSATION (Feature #62) ---
+            logConversation(message.author.id, message.channel.name || 'DM', 'user', cleanContent);
+            logConversation(message.author.id, message.channel.name || 'DM', 'assistant', text);
+
+            // --- UPDATE KNOWLEDGE BASE (Feature #130) ---
+            const category = isTicket ? 'تذكرة' : (isDM ? 'خاص' : 'عام');
+            updateKnowledge(cleanContent, text, category);
+
+            logToWebhook(message.author, cleanContent + (hasImage ? " [📸 Image]" : ""), text);
+
+        } catch (error) {
+            console.error("❌ Error:", error.message);
+
+            if (error.message.includes("429")) {
+                await message.reply(`⏳ ضغط عالي (429). جرب بعد قليل.\n التفاصيل: ${error.message}`);
+            } else {
+                await message.reply(`❌ خطأ تقني:\n\`${error.message}\``);
+            }
         }
-
-        // --- LOG CONVERSATION (Feature #62) ---
-        logConversation(message.author.id, message.channel.name || 'DM', 'user', cleanContent);
-        logConversation(message.author.id, message.channel.name || 'DM', 'assistant', text);
-
-        // --- UPDATE KNOWLEDGE BASE (Feature #130) ---
-        const category = isTicket ? 'تذكرة' : (isDM ? 'خاص' : 'عام');
-        updateKnowledge(cleanContent, text, category);
-
-        logToWebhook(message.author, cleanContent + (hasImage ? " [📸 Image]" : ""), text);
-
-    } catch (error) {
-        console.error("❌ Error:", error.message);
-
-        if (error.message.includes("429")) {
-            await message.reply(`⏳ ضغط عالي (429). جرب بعد قليل.\n التفاصيل: ${error.message}`);
-        } else {
-            await message.reply(`❌ خطأ تقني:\n\`${error.message}\``);
-        }
-    }
-});
+    });
 
 // --- KEEP ALIVE SERVER ---
 app.get('/', (req, res) => res.send('Bot is Online! 🤖🚀'));
