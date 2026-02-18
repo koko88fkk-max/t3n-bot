@@ -693,16 +693,16 @@ client.on('messageCreate', async (message) => {
         for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
             try {
                 const completion = await openai.chat.completions.create({
-                    model: "gemini-2.0-flash",
+                    model: "gemini-2.0-flash-lite",
                     messages: aiMessages,
                     max_tokens: 1500,
                 });
                 text = completion.choices[0].message.content;
                 break; // Success, exit loop
             } catch (genError) {
-                const isRetryable = genError.status === 429 || genError.status === 400 || genError.status === 503 || (genError.message && (genError.message.includes("429") || genError.message.includes("400")));
+                const isRetryable = genError.status === 429 || genError.status === 503;
                 if (isRetryable && attempt < MAX_RETRIES) {
-                    const waitTime = (attempt + 1) * 3000;
+                    const waitTime = (attempt + 1) * 5000;
                     console.log(`⚠️ Error ${genError.status}, retry ${attempt + 1}/${MAX_RETRIES} in ${waitTime / 1000}s...`);
                     await new Promise(resolve => setTimeout(resolve, waitTime));
                 } else {
