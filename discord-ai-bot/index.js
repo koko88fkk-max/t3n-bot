@@ -479,7 +479,7 @@ async function logToWebhook(user, question, answer) {
 // --- TICKET STATE REMOVED ---
 
 const conversationHistory = new Map(); // Feature #180: Per-USER history (not per-channel)
-const MAX_HISTORY = 20; // Increased from 10 for better context
+const MAX_HISTORY = 6; // Reduced from 20 to save tokens & credits (Fix 402 Error)
 const MAX_COMPRESSED_SUMMARY = 5; // Compressed older messages to keep as summary
 
 // =============================================
