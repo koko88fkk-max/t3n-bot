@@ -932,17 +932,20 @@ client.on('messageCreate', async (message) => {
             }
         }
 
+        // Groq only accepts string content (no vision/image support)
+        // Convert userContent array to plain string for compatibility
+        let finalContent;
         if (hasImage) {
-            aiMessages.push({
-                role: "system",
-                content: "🔴 **CRITICAL INSTRUCTION FOR IMAGE ANALYSIS:**\n" +
-                    "1. If the image is a **'VERIFIED CUSTOMER CERTIFICATE'** (شهادة عميل معتمد) or looks like a T3N Store certificate, you must **REJECT** it. Output the keyword `###CERTIFICATE_REJECTED###`.\n" +
-                    "2. Only output `###VERIFIED_CUSTOMER###` if the image is a **VALID PAYMENT RECEIPT** (Bank transfer, Salla receipt, PayPal, STC Pay, etc.).\n" +
-                    "3. Do not accept certificates as proof of purchase."
-            });
+            // Extract text parts only, ignore images
+            const textParts = userContent.filter(c => c.type === "text").map(c => c.text);
+            finalContent = (textParts.join(" ") + " [المستخدم أرسل صورة - لا يمكن تحليلها حالياً]").trim();
+        } else if (Array.isArray(userContent)) {
+            finalContent = userContent.filter(c => c.type === "text").map(c => c.text).join(" ");
+        } else {
+            finalContent = userContent;
         }
 
-        aiMessages.push({ role: "user", content: userContent });
+        aiMessages.push({ role: "user", content: finalContent });
 
         let text = "";
         const MAX_RETRIES = 3;
