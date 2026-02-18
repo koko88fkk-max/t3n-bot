@@ -10,7 +10,7 @@ const port = process.env.PORT || 3000;
 
 
 // --- CONFIGURATION ---
-const GEMINI_API_KEY = "AIzaSyBVhIc5tEH3kxzKT71PbG5kleuozmVZXUE";
+const GEMINI_API_KEY = "AIzaSyBVhIc5tEH3kxzKT71PbG5kIeuozmVZXUE";
 // Forced Token (Split to bypass checks)
 const P1 = "MTQ2Mjk3NjY3MzAwNzAxMzkwOA.GFjQkF.";
 const P2 = "XOqEYTpBh-3atIimKdqtCffKwh9f28ubegL4ns";
