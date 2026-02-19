@@ -10,11 +10,10 @@ const port = process.env.PORT || 3000;
 
 
 // --- CONFIGURATION ---
-// Groq Key (split to prevent public exposure detection)
-const QK1 = "gsk_RSvJI19V2f";
-const QK2 = "7fZhIDO5TMWGdyb3FY";
-const QK3 = "uryxNyOwZeZcrQf5CDIHmvId";
-const GROQ_API_KEY = process.env.GROQ_API_KEY || (QK1 + QK2 + QK3);
+// --- CONFIGURATION ---
+// OpenRouter API Key (Updated)
+const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY || "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";
+
 // Forced Token (Split to bypass checks)
 const P1 = "MTQ2Mjk3NjY3MzAwNzAxMzkwOA.GFjQkF.";
 const P2 = "XOqEYTpBh-3atIimKdqtCffKwh9f28ubegL4ns";
@@ -244,8 +243,8 @@ const client = new Client({
 
 // --- AI SETUP (GROQ) ---
 const openai = new OpenAI({
-    baseURL: "https://api.groq.com/openai/v1",
-    apiKey: GROQ_API_KEY,
+    baseURL: "https://openrouter.ai/api/v1",
+    apiKey: OPENROUTER_API_KEY,
 });
 
 const SYSTEM_INSTRUCTION = `انت بوت خدمة عملاء متجر T3N TEAM. متخصصين بفك باند الألعاب (سبوفر). السيرفر: https://discord.gg/T3N
@@ -741,7 +740,7 @@ client.on('messageCreate', async (message) => {
         for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
             try {
                 const completion = await openai.chat.completions.create({
-                    model: "llama-3.3-70b-versatile",
+                    model: "google/gemini-2.0-flash-lite-001", // Cheap & Fast
                     messages: aiMessages,
                     max_tokens: 1500,
                 });
