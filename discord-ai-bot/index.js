@@ -1258,18 +1258,24 @@ client.on('interactionCreate', async (interaction) => {
 app.get('/', (req, res) => res.send('T3N Bot is running! ✅'));
 app.get('/health', (req, res) => res.json({ status: 'ok', uptime: process.uptime() }));
 
-const server = app.listen(port, '0.0.0.0', () => {
-    console.log(`🌐 Server listening on port ${port}`);
-});
+// Wait 2 seconds before binding to ensure old process releases port
+setTimeout(() => {
+    const server = app.listen(port, '0.0.0.0', () => {
+        console.log(`🌐 Server listening on port ${port}`);
+    });
 
-server.on('error', (e) => {
-    if (e.code === 'EADDRINUSE') {
-        console.log('⚠️ Port busy, retrying...');
-        setTimeout(() => {
-            server.close();
-            server.listen(port, '0.0.0.0');
-        }, 1000);
-    }
-});
+    server.on('error', (e) => {
+        if (e.code === 'EADDRINUSE') {
+            console.log(`⚠️ Port ${port} busy, creating random port fallback...`);
+            // Fallback to random port if main port is stuck
+            const randomPort = 0; // OS assigns random port
+            const fallbackServer = app.listen(randomPort, '0.0.0.0', () => {
+                console.log(`🌐 Server listening on fallback port ${fallbackServer.address().port}`);
+            });
+        } else {
+            console.error('Server error:', e);
+        }
+    });
+}, 2000);
 
 client.login(DISCORD_BOT_TOKEN);
