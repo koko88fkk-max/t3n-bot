@@ -757,11 +757,11 @@ client.on('messageCreate', async (message) => {
                      text = "###VERIFIED_CUSTOMER### هلا والله بالزين! تم استلام الفاتورة وعطيتك الرتبة يا وحش. نورتنا!"; 
                 } else {
                     const completion = await openai.chat.completions.create({
-                        model: "qwen/qwen3.5-397b-a17b",
-                    temperature: 0.6,
+                        model: "meta/llama-3.3-70b-instruct",
+                    temperature: 0.7,
                         messages: aiMessages,
                         max_tokens: 1024,
-                    extra_body: { "chat_template_kwargs": { "enable_thinking": false } },
+                    
                     });
                     text = completion.choices[0].message.content;
                 }
