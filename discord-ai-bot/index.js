@@ -14,8 +14,6 @@ const port = process.env.PORT || 3000;
 // OpenRouter API Key (Updated - Forced)
 // OpenRouter API Key (Wait for Render Env Var)
 // OpenRouter API Key (Split to prevent auto-revocation)
-const KP1 = "sk-or-v1-e402c9fb7fc59b2b5bc9762797";
-const KP2 = "e350953b387a1a72e51c5a2cda463d464efdcb";
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY || (KP1 + KP2);
 
 // Forced Token (Split to bypass checks)
@@ -246,9 +244,10 @@ const client = new Client({
 });
 
 // --- AI SETUP (GROQ) ---
+// --- AI SETUP (NVIDIA MINIMAX) ---
 const openai = new OpenAI({
-    baseURL: "https://openrouter.ai/api/v1",
-    apiKey: OPENROUTER_API_KEY,
+    baseURL: "https://integrate.api.nvidia.com/v1",
+    apiKey: "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",
 });
 
 const SYSTEM_INSTRUCTION = `
@@ -737,9 +736,9 @@ client.on('messageCreate', async (message) => {
                      text = "###VERIFIED_CUSTOMER### هلا والله بالزين! تم استلام الفاتورة وعطيتك الرتبة يا وحش. نورتنا!"; 
                 } else {
                     const completion = await openai.chat.completions.create({
-                        model: "google/gemma-3-12b-it:free",
+                        model: "minimaxai/minimax-m2.1",
                         messages: aiMessages,
-                        max_tokens: 250,
+                        max_tokens: 1024,
                     });
                     text = completion.choices[0].message.content;
                 }
