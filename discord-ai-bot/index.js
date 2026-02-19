@@ -342,6 +342,7 @@ const MAX_COMPRESSED_SUMMARY = 5; // Compressed older messages to keep as summar
 // =============================================
 client.once('ready', async () => {
     console.log(`✅ Bot is Ready! Logged in as ${client.user.tag}`);
+    console.log(`🚀 RUNNING NEW VERSION: OpenRouter + Gemini Flash Lite (Groq Removed)`);
     if (webhookClient) console.log(`🔗 Logging enabled via Webhook.`);
 
     // --- Load AI Memory Data (#62 #121 #130) ---
