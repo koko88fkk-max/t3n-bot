@@ -12,7 +12,7 @@ const port = process.env.PORT || 3000;
 // --- CONFIGURATION ---
 // --- CONFIGURATION ---
 // OpenRouter API Key (Updated - Forced)
-const OPENROUTER_API_KEY = "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";
+const OPENROUTER_API_KEY = "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";
 
 // Forced Token (Split to bypass checks)
 const P1 = "MTQ2Mjk3NjY3MzAwNzAxMzkwOA.GFjQkF.";
@@ -741,17 +741,17 @@ client.on('messageCreate', async (message) => {
         for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
             try {
                 // FORCE MAINTENANCE MODE
-                throw new Error("AI_DISABLED_MAINTENANCE");
+                // AI ENABLED (FREE MODEL) // 
 
-                /*
+                
                 const completion = await openai.chat.completions.create({
-                    model: "google/gemini-2.0-flash-lite-001", 
+                    model: "liquid/lfm-2.5-1.2b-instruct:free", 
                     messages: aiMessages,
                     max_tokens: 1500,
                 });
                 text = completion.choices[0].message.content;
                 break; 
-                */
+                
             } catch (genError) {
                 const isRetryable = genError.status === 429 || genError.status === 503;
                 if (isRetryable && attempt < MAX_RETRIES) {
