@@ -761,6 +761,7 @@ client.on('messageCreate', async (message) => {
                     temperature: 0.6,
                         messages: aiMessages,
                         max_tokens: 1024,
+                    extra_body: { "chat_template_kwargs": { "enable_thinking": false } },
                     });
                     text = completion.choices[0].message.content;
                 }
