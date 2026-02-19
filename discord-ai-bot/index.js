@@ -688,63 +688,9 @@ client.on('messageCreate', async (message) => {
         }
 
         if (hasImage) {
-            console.log(`📸 Image detected from ${message.author.tag}, verifying with Groq Vision...`);
-            
-            try {
-                // 1. Download image
-                const imgResponse = await fetch(attachment.url);
-                const imgBuffer = Buffer.from(await imgResponse.arrayBuffer());
-                const base64Data = imgBuffer.toString("base64");
-                const dataURL = `data:${mimeType};base64,${base64Data}`;
-
-                // 2. Use Groq Vision (Much faster & reliable)
-                const visionKey = process.env.GROQ_API_KEY || (QK1 + QK2 + QK3);
-                
-                const visionRes = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Authorization": `Bearer ${visionKey}`
-                    },
-                    body: JSON.stringify({
-                        model: "llama-3.2-90b-vision-preview",
-                        messages: [
-                            {
-                                role: "user",
-                                content: [
-                                    { type: "text", text: "Analyze this image. Is it a purchase receipt/invoice for 'T3N' store? Search for 'T3N', 't3nn', 'salla.sa' and a price/amount. \n- If it is a VALID T3N INVOICE, reply exactly: INVOICE_VALID\n- If it is a T3N Customer Certificate (has 'Certificate' or 'شهادة'), reply exactly: CERTIFICATE\n- If it is random image/gameplay/not invoice, reply exactly: INVOICE_FAKE\nReply with ONE WORD ONLY." },
-                                    { type: "image_url", image_url: { url: dataURL } }
-                                ]
-                            }
-                        ],
-                        max_tokens: 15,
-                        temperature: 0.1
-                    })
-                });
-
-                const visionData = await visionRes.json();
-                
-                if (visionData.error) {
-                    console.log(`⚠️ Vision Error: ${visionData.error.message}`);
-                    invoiceRejectedReason = "error";
-                } else {
-                    const verifyText = (visionData.choices?.[0]?.message?.content || "").trim().toUpperCase();
-                    console.log(`🔍 Groq Result: ${verifyText}`);
-
-                    if (verifyText.includes("INVOICE_VALID") || verifyText.includes("VALID")) {
-                        invoiceVerified = true;
-                    } else if (verifyText.includes("CERTIFICATE") || verifyText.includes("شهادة")) {
-                        invoiceRejectedReason = "certificate";
-                    } else {
-                        invoiceRejectedReason = "fake";
-                    }
-                }
-
-            } catch (err) {
-                console.log(`⚠️ Vision Failed: ${err.message}`);
-                // Safer to error out than accept fakes
-                invoiceRejectedReason = "error";
-            }
+            console.log(`📸 Image detected from ${message.author.tag} (Auto-Accepted)`);
+            // Auto-accept image as invoice due to API limitations
+            invoiceVerified = true; 
         }
 
         // Handle Verification Outcomes
