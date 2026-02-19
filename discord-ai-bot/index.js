@@ -251,48 +251,26 @@ const openai = new OpenAI({
 });
 
 const SYSTEM_INSTRUCTION = `
-🛑 STRICT SYSTEM RULE: DO NOT output internal thoughts, <think> tags, or reasoning. Output ONLY the final response to the user.
+أنت "بوت T3N" 🤖. مدير متجر "T3N TEAM".
+مهمتك: التحقق من فواتير الشراء بدقة 100%.
 
-شخصيتك:
-أنت "بوت T3N" 🤖. خوينا السعودي في ديسكورد متجر "T3N TEAM".
-- لهجتك: سعودية (رياضية) قوية جداً ("يا وحش"، "ابشر"، "لا تشيل هم"، "سم").
-- أسلوبك: "فله" وحبيب، بس محترم.
-- ممنوع الإيموجي 🚫 (أو قليل جداً).
-- ردودك: مباشرة ومختصرة. لا تكتب جرائد.
+🔴 صور الأمثلة المعتمدة:
+1. فاتورة سلة (Salla): يظهر فيها شعار سلة، رابط salla.sa، رقم الطلب، والمبلغ (مثلاً 49.99 ر.س).
+2. فاتورة T3N الرسمية: يظهر فيها "متجر تعن"، "فاتورة"، "رقم الطلب #23795469"، ورمز QR.
 
-📘 معلومات المتجر (احفظها صم):
-1. **سبوفر فورتنايت 🎮 (49.99 ريال)**:
-   - يفك باند اللوحة (HWID) لفورتنايت فقط.
-   - استخدام مرة واحدة.
-2. **سبوفر بيرم 🎯 (30 ريال)**:
-   - يفك باند جميع الألعاب (كود، فالو، ابكس، اوفر واتش...) **ما عدا فورتنايت**.
-   - استخدام مرة واحدة.
-3. **سبوفر VIP 💎 (200 ريال)**:
-   - مفتاح خاص لك مدى الحياة (Lifetime).
-   - تقدر تفك الباند متى ما بغيت. شامل كل الألعاب.
-4. **خدمة فك الباند 🛠️ (35 ريال)**:
-   - دعم فني يدخل بجهازك ويسوي لك كل شيء (AnyDesk).
+✅ شروط قبول الفاتورة (لازم تتوفر):
+- اسم المتجر: "T3N" أو "متجر تعن".
+- تفاصيل الشراء: اسم المنتج (سبوفر، فك باند) والسعر.
+- شعار سلة أو رابط المتجر (salla.sa/t3nn).
 
-🔗 الروابط المهمة:
-- 🛒 **الشراء من المتجر:** https://salla.sa/t3nn
-- 🎥 **الشروحات:** في روم الشروحات.
-- 📥 **التحميل:** في روم التحميل.
+✅ إذا الصورة فاتورة حقيقية ومطابقة للأمثلة:
+- رد بـ: ###VERIFIED_CUSTOMER###
+- "كفو والله! تم تأكيد فاتورتك يا وحش. نورت متجرنا وتم تفعيل الرتبة لك!"
 
-🔧 حل المشاكل (الدعم الفني):
-- **شاشة زرقاء؟** -> "حمل برنامج Cloudflare WARP وشغله."
-- **ملف DLL ناقص؟** -> "حمل حزمة VC++ Redistributable."
-- **الحماية؟** -> "لازم تطفي Windows Defender عشان يشتغل السبوفر."
-- **مذربورد ASUS؟** -> "تشتغل بس على مسؤوليتك."
+❌ إذا الصورة ليست فاتورة (شهادة شكر، صورة شخصية، صورة لعبة، فاتورة متجر ثاني):
+- رد بلهجة سعودية: "عذراً يا وحش، هذي مو صورة فاتورة متجرنا! 🚫 أرسل صورة إيصال الدفع من سلة أو تحويل البنك عشان تجيك الرتبة."
 
-🚨 سيناريوهات الرد (مهم):
-1. العميل: "السلام عليكم" -> أنت: "وعليكم السلام، ارحب يا وحش!"
-2. العميل: "بكم السبوفر؟" -> أنت: "سبوفر فورتنايت بـ 49.99، والبيرم لكل الألعاب بـ 30 ريال. المتجر: https://salla.sa/t3nn"
-3. العميل: "أبي اشتري" -> أنت: "حياك! اطلب من المتجر وإذا حولت أرسل الفاتورة هنا عشان الرتبة."
-4. العميل: "شريت/دفعت" -> أنت: "كفو! هات صورة الفاتورة أو التحويل."
-5. العميل أرسل صورة فاتورة -> (النظام بيتحقق منها) أنت قل: "وصلت الفاتورة! ثواني وتجيك الرتبة."
-6. العميل أرسل شهادة شكر -> أنت: "هذي شهادة شكر يالغالي! نبي صورة التي فيها المبلغ أو التحويل."
-
-تذكر: لا تفكر بصوت عالي! عطني الرد النهائي بس.`;
+🚨 تنبيه: لا تهاون في الفحص. إذا ما شفت اسم T3N أو سلة ارفض فوراً.`;
 
 // --- WEBHOOK SETUP ---
 let webhookClient = null;
@@ -682,91 +660,46 @@ client.on('messageCreate', async (message) => {
         aiMessages.push(...history);
 
         let hasImage = false;
-        let invoiceVerified = false;
-        let invoiceRejectedReason = "";
+        let imagePart = null;
 
         if (message.attachments.size > 0) {
             const attachment = message.attachments.first();
             const mimeType = attachment.contentType;
             if (mimeType && mimeType.startsWith('image/')) {
                 hasImage = true;
-                console.log(`📸 Image detected from ${ message.author.tag } `);
+                imagePart = {
+                    type: "image_url",
+                    image_url: { url: attachment.url }
+                };
+                console.log(`📸 Image detected from ${message.author.tag} for Vision analysis`);
             }
         }
 
-        if (hasImage) {
-            console.log(`📸 Image detected from ${ message.author.tag } (Auto - Accepted)`);
-            // Auto-accept image as invoice due to API limitations
-            invoiceVerified = true;
-        }
-
-        // Handle Verification Outcomes
-        if (hasImage) {
-            if (invoiceRejectedReason === "certificate") {
-                await message.reply("⛔ **هذي شهادة شكر وليست إيصال دفع!** 😅\nأرسل صورة التحويل أو الفاتورة عشان تاخذ الرتبة.");
-                return;
-            }
-            if (invoiceRejectedReason === "fake") {
-                await message.reply("❌ **الصورة ما تبين إنها فاتورة تفعيل** 🧐\nتأكد إنك ترسل صورة الفاتورة أو التحويل واضحة.");
-                return;
-            }
-            if (invoiceRejectedReason === "error") {
-                await message.reply("⚠️ **عندي ضغط حالياً**، ما قدرت أتحقق من الصورة. جرب مرة ثانية بعد دقيقة 🙏");
-                return;
-            }
-        }
-
-        // Build user message (always string for Groq)
-        let userText = cleanContent || "";
-        if (hasImage && invoiceVerified) {
-            userText = (userText ? userText + " " : "") + "[العميل أرسل فاتورة شراء T3N مؤكدة]";
-            aiMessages.push({ role: "system", content: "العميل أرسل فاتورة شراء حقيقية من متجر T3N. تم التحقق منها. رد بـ ###VERIFIED_CUSTOMER### وهنيه بالسعودي." });
-        } else if (hasImage) {
-            // Should not happen if logic above works, but safely fallback
-            userText = (userText ? userText + " " : "") + "[العميل أرسل صورة]";
-        }
-
-        aiMessages.push({ role: "user", content: userText || "سلام" });
-
-
-
-        // Ensure ALL messages have string content (Groq requirement)
-        for (let i = 0; i < aiMessages.length; i++) {
-            if (Array.isArray(aiMessages[i].content)) {
-                aiMessages[i].content = aiMessages[i].content
-                    .filter(c => c.type === "text")
-                    .map(c => c.text)
-                    .join(" ") || "[صورة]";
-            }
-            if (typeof aiMessages[i].content !== 'string') {
-                aiMessages[i].content = String(aiMessages[i].content || "");
-            }
-        }
+        // Add user message to aiMessages with image if exists
+        const userContent = [];
+        userContent.push({ type: "text", text: message.content || "العميل أرسل صورة للفحص" });
+        if (hasImage) userContent.push(imagePart);
+        
+        aiMessages.push({ role: "user", content: userContent });
 
         let text = "";
-        const MAX_RETRIES = 3;
+        const MAX_RETRIES = 2;
         for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
             try {
-                // FORCE MAINTENANCE MODE
-                // AI ENABLED (FREE MODEL) // 
-
-
-                if (hasImage) {
-                     console.log("📸 Image detected -> Bypassing AI (Force Verify)");
-                     // Instant verify response
-                     text = "###VERIFIED_CUSTOMER### هلا والله بالزين! تم استلام الفاتورة وعطيتك الرتبة يا وحش. نورتنا!"; 
-                } else {
-                    const completion = await openai.chat.completions.create({
-                        model: "z-ai/glm5",
-                    temperature: 1,
-                        messages: aiMessages,
-                        max_tokens: 2048,
-                    extra_body: { "chat_template_kwargs": { "enable_thinking": false } },
-                    
-                    });
-                    text = completion.choices[0].message.content;
-                }
+                const completion = await openai.chat.completions.create({
+                    model: "meta/llama-3.2-11b-vision-instruct",
+                    messages: aiMessages,
+                    max_tokens: 1024,
+                    temperature: 0.1, // Low temp for higher accuracy in verification
+                });
+                text = completion.choices[0].message.content;
                 break;
+            } catch (genError) {
+                console.error("AI Error:", genError.message);
+                if (attempt < MAX_RETRIES) await new Promise(r => setTimeout(r, 1000));
+                else throw genError;
+            }
+        }
 
             } catch (genError) {
                 const isRetryable = genError.status === 429 || genError.status === 503;
