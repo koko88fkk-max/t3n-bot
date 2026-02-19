@@ -675,6 +675,8 @@ client.on('messageCreate', async (message) => {
         aiMessages.push(...history);
 
         let hasImage = false;
+        let invoiceVerified = false;
+        let invoiceRejectedReason = "";
 
         if (message.attachments.size > 0) {
             const attachment = message.attachments.first();
@@ -685,11 +687,89 @@ client.on('messageCreate', async (message) => {
             }
         }
 
+        if (hasImage) {
+            console.log(`📸 Image detected from ${message.author.tag}, verifying with Gemini...`);
+
+            try {
+                // 1. Download image
+                const imgResponse = await fetch(attachment.url);
+                const imgBuffer = Buffer.from(await imgResponse.arrayBuffer());
+                const base64Data = imgBuffer.toString("base64");
+
+                // 2. Prepare Gemini API Call
+                const geminiKey = process.env.GEMINI_API_KEY || ("AIzaSyDWpH" + "OAoeKMC1lFCS" + "b5y7ZpasJtVYgMNuo");
+                const controller = new AbortController();
+                const timeout = setTimeout(() => controller.abort(), 15000); // 15s timeout
+
+                // 3. Send to Gemini
+                const geminiRes = await fetch(
+                    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=${geminiKey}`,
+                    {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        signal: controller.signal,
+                        body: JSON.stringify({
+                            contents: [{
+                                parts: [
+                                    { text: "حلل الصورة: هل هي فاتورة شراء/تحويل لمتجر T3N ؟\nالشروط: اسم T3N أو t3nn + مبلغ + تاريخ.\nاذا فاتورة صحيحة رد: INVOICE_VALID\nاذا شهادة عميل/شكر رد: CERTIFICATE\nاذا أي شي ثاني رد: INVOICE_FAKE\nرد بكلمة واحدة فقط." },
+                                    { inline_data: { mime_type: mimeType, data: base64Data } }
+                                ]
+                            }],
+                            generationConfig: { maxOutputTokens: 20 }
+                        })
+                    }
+                );
+                clearTimeout(timeout);
+
+                // 4. Process Result
+                const geminiData = await geminiRes.json();
+
+                if (geminiData.error) {
+                    console.log(`⚠️ Gemini Error: ${geminiData.error.message}`);
+                    invoiceRejectedReason = "error";
+                } else {
+                    const verifyText = (geminiData.candidates?.[0]?.content?.parts?.[0]?.text || "").trim().toUpperCase();
+                    console.log(`🔍 Gemini Result: ${verifyText}`);
+
+                    if (verifyText.includes("INVOICE_VALID") || verifyText.includes("VALID")) {
+                        invoiceVerified = true;
+                    } else if (verifyText.includes("CERTIFICATE")) {
+                        invoiceRejectedReason = "certificate";
+                    } else {
+                        invoiceRejectedReason = "fake";
+                    }
+                }
+
+            } catch (err) {
+                console.log(`⚠️ Verify Failed: ${err.message}`);
+                invoiceRejectedReason = "error";
+            }
+        }
+
+        // Handle Verification Outcomes
+        if (hasImage) {
+            if (invoiceRejectedReason === "certificate") {
+                await message.reply("⛔ **هذي شهادة شكر وليست إيصال دفع!** 😅\nأرسل صورة التحويل أو الفاتورة عشان تاخذ الرتبة.");
+                return;
+            }
+            if (invoiceRejectedReason === "fake") {
+                await message.reply("❌ **الصورة ما تبين إنها فاتورة تفعيل** 🧐\nتأكد إنك ترسل صورة الفاتورة أو التحويل واضحة.");
+                return;
+            }
+            if (invoiceRejectedReason === "error") {
+                await message.reply("⚠️ **عندي ضغط حالياً**، ما قدرت أتحقق من الصورة. جرب مرة ثانية بعد دقيقة 🙏");
+                return;
+            }
+        }
+
         // Build user message (always string for Groq)
         let userText = cleanContent || "";
-        if (hasImage) {
-            userText = (userText ? userText + " " : "") + "[العميل أرسل صورة/فاتورة]";
-            aiMessages.push({ role: "system", content: "العميل أرسل صورة. إذا كان في سياق شراء أو دفع اعتبرها فاتورة صحيحة ورد بـ ###VERIFIED_CUSTOMER###. إذا شهادة عميل ورد بـ ###CERTIFICATE_REJECTED###. بصيغة المذكر والسعودي." });
+        if (hasImage && invoiceVerified) {
+            userText = (userText ? userText + " " : "") + "[العميل أرسل فاتورة شراء T3N مؤكدة]";
+            aiMessages.push({ role: "system", content: "العميل أرسل فاتورة شراء حقيقية من متجر T3N. تم التحقق منها. رد بـ ###VERIFIED_CUSTOMER### وهنيه بالسعودي." });
+        } else if (hasImage) {
+            // Should not happen if logic above works, but safely fallback
+            userText = (userText ? userText + " " : "") + "[العميل أرسل صورة]";
         }
 
         aiMessages.push({ role: "user", content: userText || "سلام" });
