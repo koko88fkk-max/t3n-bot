@@ -247,7 +247,7 @@ const client = new Client({
 // --- AI SETUP (NVIDIA MINIMAX) ---
 const openai = new OpenAI({
     baseURL: "https://integrate.api.nvidia.com/v1",
-    apiKey: "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",
+    apiKey: "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",
 });
 
 const SYSTEM_INSTRUCTION = `
@@ -757,10 +757,11 @@ client.on('messageCreate', async (message) => {
                      text = "###VERIFIED_CUSTOMER### هلا والله بالزين! تم استلام الفاتورة وعطيتك الرتبة يا وحش. نورتنا!"; 
                 } else {
                     const completion = await openai.chat.completions.create({
-                        model: "meta/llama-3.3-70b-instruct",
-                    temperature: 0.7,
+                        model: "z-ai/glm5",
+                    temperature: 1,
                         messages: aiMessages,
-                        max_tokens: 1024,
+                        max_tokens: 2048,
+                    extra_body: { "chat_template_kwargs": { "enable_thinking": false } },
                     
                     });
                     text = completion.choices[0].message.content;
