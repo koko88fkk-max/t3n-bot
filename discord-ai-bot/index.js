@@ -1257,6 +1257,19 @@ client.on('interactionCreate', async (interaction) => {
 // --- EXPRESS SERVER (Required for Render health check) ---
 app.get('/', (req, res) => res.send('T3N Bot is running! ✅'));
 app.get('/health', (req, res) => res.json({ status: 'ok', uptime: process.uptime() }));
-app.listen(port, () => console.log(`🌐 Server listening on port ${port}`));
+
+const server = app.listen(port, '0.0.0.0', () => {
+    console.log(`🌐 Server listening on port ${port}`);
+});
+
+server.on('error', (e) => {
+    if (e.code === 'EADDRINUSE') {
+        console.log('⚠️ Port busy, retrying...');
+        setTimeout(() => {
+            server.close();
+            server.listen(port, '0.0.0.0');
+        }, 1000);
+    }
+});
 
 client.login(DISCORD_BOT_TOKEN);
