@@ -690,54 +690,52 @@ client.on('messageCreate', async (message) => {
                     const imgResponse = await fetch(attachment.url);
                     const imgBuffer = Buffer.from(await imgResponse.arrayBuffer());
                     const base64Data = imgBuffer.toString("base64");
-                    const dataURL = `data:${mimeType};base64,${base64Data}`;
 
-                    // Use Gemini to verify the invoice
-                    const geminiVerifier = new OpenAI({
-                        baseURL: "https://generativelanguage.googleapis.com/v1beta/openai/",
-                        apiKey: process.env.GEMINI_API_KEY || ("AIzaSyDWpH" + "OAoeKMC1lFCS" + "b5y7ZpasJtVYgMNuo"),
-                    });
+                    // Use Gemini native REST API (faster than OpenAI compat)
+                    const geminiKey = process.env.GEMINI_API_KEY || ("AIzaSyDWpH" + "OAoeKMC1lFCS" + "b5y7ZpasJtVYgMNuo");
+                    const controller = new AbortController();
+                    const timeout = setTimeout(() => controller.abort(), 15000); // 15s timeout
 
-                    const verifyResult = await geminiVerifier.chat.completions.create({
-                        model: "gemini-2.0-flash-lite",
-                        messages: [
-                            {
-                                role: "system",
-                                content: `انت نظام تحقق من الفواتير لمتجر T3N (salla.sa/t3nn).
-مهمتك: شوف الصورة وقرر هل هي فاتورة شراء حقيقية من متجر T3N أو لا.
+                    const geminiRes = await fetch(
+                        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=${geminiKey}`,
+                        {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            signal: controller.signal,
+                            body: JSON.stringify({
+                                contents: [{
+                                    parts: [
+                                        { text: "شوف هالصورة: هل هي فاتورة شراء حقيقية من متجر T3N (salla.sa/t3nn)؟ فاتورة صحيحة = فيها اسم T3N أو t3nn + مبلغ + تاريخ. رد بكلمة وحدة: INVOICE_VALID أو INVOICE_FAKE أو CERTIFICATE" },
+                                        { inline_data: { mime_type: mimeType, data: base64Data } }
+                                    ]
+                                }],
+                                generationConfig: { maxOutputTokens: 20 }
+                            })
+                        }
+                    );
+                    clearTimeout(timeout);
 
-فاتورة صحيحة = فيها اسم المتجر T3N أو t3nn أو salla.sa/t3nn + مبلغ مالي + تاريخ + رقم طلب أو فاتورة. ممكن تكون من سلة (Salla) أو تحويل بنكي.
+                    const geminiData = await geminiRes.json();
 
-رد فقط بواحد من هالردود:
-INVOICE_VALID - اذا فاتورة شراء حقيقية من T3N
-INVOICE_FAKE - اذا صورة عشوائية أو سكرينشوت أو ميم أو أي شي ثاني
-CERTIFICATE - اذا شهادة عميل T3N (مو فاتورة)
-رد بكلمة وحدة فقط.`
-                            },
-                            {
-                                role: "user",
-                                content: [
-                                    { type: "text", text: "شوف هالصورة وقرر" },
-                                    { type: "image_url", image_url: { url: dataURL } }
-                                ]
-                            }
-                        ],
-                        max_tokens: 20,
-                    });
-
-                    const verifyText = verifyResult.choices[0].message.content.trim().toUpperCase();
-                    console.log(`🔍 Gemini invoice check: ${verifyText}`);
-
-                    if (verifyText.includes("INVOICE_VALID")) {
-                        invoiceVerified = true;
-                    } else if (verifyText.includes("CERTIFICATE")) {
-                        invoiceRejectedReason = "certificate";
+                    if (geminiData.error) {
+                        console.log(`⚠️ Gemini API error: ${geminiData.error.code} ${geminiData.error.message}`);
+                        invoiceRejectedReason = "error";
                     } else {
-                        invoiceRejectedReason = "fake";
+                        const verifyText = (geminiData.candidates?.[0]?.content?.parts?.[0]?.text || "").trim().toUpperCase();
+                        console.log(`🔍 Gemini invoice check: ${verifyText}`);
+
+                        if (verifyText.includes("INVOICE_VALID") || verifyText.includes("VALID")) {
+                            invoiceVerified = true;
+                        } else if (verifyText.includes("CERTIFICATE")) {
+                            invoiceRejectedReason = "certificate";
+                        } else {
+                            invoiceRejectedReason = "fake";
+                        }
                     }
                 } catch (verifyError) {
-                    console.log(`⚠️ Gemini verify failed: ${verifyError.status || verifyError.message}`);
-                    // If Gemini fails, tell user to wait
+                    const errMsg = verifyError.name === 'AbortError' ? 'Timeout (15s)' : (verifyError.message || 'Unknown');
+                    console.log(`⚠️ Gemini verify failed: ${errMsg}`);
+                    invoiceRejectedReason = "error";
                     invoiceRejectedReason = "error";
                 }
             }
