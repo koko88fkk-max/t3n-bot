@@ -1334,4 +1334,9 @@ client.on('interactionCreate', async (interaction) => {
     }
 });
 
+// --- EXPRESS SERVER (Required for Render health check) ---
+app.get('/', (req, res) => res.send('T3N Bot is running! ✅'));
+app.get('/health', (req, res) => res.json({ status: 'ok', uptime: process.uptime() }));
+app.listen(port, () => console.log(`🌐 Server listening on port ${port}`));
+
 client.login(DISCORD_BOT_TOKEN);
