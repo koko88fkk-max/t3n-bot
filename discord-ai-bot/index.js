@@ -740,19 +740,23 @@ client.on('messageCreate', async (message) => {
         const MAX_RETRIES = 3;
         for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
             try {
-                throw new Error("AI_DISABLED_MAINTENANCE"); // const completion = await openai.chat.completions.create({
-                    // model: "google/gemini-2.0-flash-lite-001", // Cheap & Fast
+                // FORCE MAINTENANCE MODE
+                throw new Error("AI_DISABLED_MAINTENANCE");
+
+                /*
+                const completion = await openai.chat.completions.create({
+                    model: "google/gemini-2.0-flash-lite-001", 
                     messages: aiMessages,
                     max_tokens: 1500,
                 });
                 text = completion.choices[0].message.content;
-                break; // Success, exit loop
+                break; 
+                */
             } catch (genError) {
                 const isRetryable = genError.status === 429 || genError.status === 503;
                 if (isRetryable && attempt < MAX_RETRIES) {
-                    const waitTime = (attempt + 1) * 5000;
-                    console.log(`⚠️ Error ${genError.status}, retry ${attempt + 1}/${MAX_RETRIES} in ${waitTime / 1000}s...`);
-                    await new Promise(resolve => setTimeout(resolve, waitTime));
+                    // Retry logic preserved but unused due to manual throw
+                    await new Promise(resolve => setTimeout(resolve, 1000));
                 } else {
                     throw genError;
                 }
@@ -925,9 +929,11 @@ client.on('messageCreate', async (message) => {
         console.error("❌ Error:", error.message);
 
         if (error.message.includes("429")) {
-            await message.reply(`⏳ ضغط عالي (429). جرب بعد قليل.\n التفاصيل: ${error.message}`);
+            await message.reply(`⏳ ضغط عالي. جرب بعد دقيقة.`);
         } else {
-            await message.reply(`❌ خطأ تقني:\n\`${error.message}\``);
+            // Friendly Maintenance Error (Hide Technical Details)
+            // await message.reply(`🛠️ **أنا في وضع الصيانة حالياً لتحديث السيرفرات.**\nأرجو الانتظار قليلاً أو فتح تذكرة للدعم الفني.`);
+            console.error("Bot Error (Hidden form User):", error.message);
         }
     }
 });
