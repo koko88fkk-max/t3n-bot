@@ -675,21 +675,103 @@ client.on('messageCreate', async (message) => {
         aiMessages.push(...history);
 
         let hasImage = false;
+        let invoiceVerified = false;
+        let invoiceRejectedReason = "";
 
         if (message.attachments.size > 0) {
             const attachment = message.attachments.first();
             const mimeType = attachment.contentType;
             if (mimeType && mimeType.startsWith('image/')) {
                 hasImage = true;
-                console.log(`📸 Image detected from ${message.author.tag}`);
+                console.log(`📸 Image detected from ${message.author.tag}, verifying with Gemini...`);
+
+                try {
+                    // Download image and encode as base64
+                    const imgResponse = await fetch(attachment.url);
+                    const imgBuffer = Buffer.from(await imgResponse.arrayBuffer());
+                    const base64Data = imgBuffer.toString("base64");
+                    const dataURL = `data:${mimeType};base64,${base64Data}`;
+
+                    // Use Gemini to verify the invoice
+                    const geminiVerifier = new OpenAI({
+                        baseURL: "https://generativelanguage.googleapis.com/v1beta/openai/",
+                        apiKey: process.env.GEMINI_API_KEY || "AIzaSyAassRyb7KudXVmrpGPTy3fCEBje5cYMTs",
+                    });
+
+                    const verifyResult = await geminiVerifier.chat.completions.create({
+                        model: "gemini-2.0-flash-lite",
+                        messages: [
+                            {
+                                role: "system",
+                                content: `انت نظام تحقق من الفواتير لمتجر T3N (salla.sa/t3nn).
+مهمتك: شوف الصورة وقرر هل هي فاتورة شراء حقيقية من متجر T3N أو لا.
+
+فاتورة صحيحة = فيها اسم المتجر T3N أو t3nn أو salla.sa/t3nn + مبلغ مالي + تاريخ + رقم طلب أو فاتورة. ممكن تكون من سلة (Salla) أو تحويل بنكي.
+
+رد فقط بواحد من هالردود:
+INVOICE_VALID - اذا فاتورة شراء حقيقية من T3N
+INVOICE_FAKE - اذا صورة عشوائية أو سكرينشوت أو ميم أو أي شي ثاني
+CERTIFICATE - اذا شهادة عميل T3N (مو فاتورة)
+رد بكلمة وحدة فقط.`
+                            },
+                            {
+                                role: "user",
+                                content: [
+                                    { type: "text", text: "شوف هالصورة وقرر" },
+                                    { type: "image_url", image_url: { url: dataURL } }
+                                ]
+                            }
+                        ],
+                        max_tokens: 20,
+                    });
+
+                    const verifyText = verifyResult.choices[0].message.content.trim().toUpperCase();
+                    console.log(`🔍 Gemini invoice check: ${verifyText}`);
+
+                    if (verifyText.includes("INVOICE_VALID")) {
+                        invoiceVerified = true;
+                    } else if (verifyText.includes("CERTIFICATE")) {
+                        invoiceRejectedReason = "certificate";
+                    } else {
+                        invoiceRejectedReason = "fake";
+                    }
+                } catch (verifyError) {
+                    console.log(`⚠️ Gemini verify failed: ${verifyError.status || verifyError.message}`);
+                    // If Gemini fails, tell user to wait
+                    invoiceRejectedReason = "error";
+                }
             }
+        }
+
+        // Handle invoice verification results
+        if (hasImage && invoiceRejectedReason === "certificate") {
+            await message.reply({
+                content: "⛔ **هذي شهادة شكر وليست فاتورة شراء!** 😅\n\nعشان تاخذ الرتبة لازم ترسل صورة **فاتورة الشراء** من سلة أو التحويل البنكي.\nالشهادة للزينة بس! 📜✨"
+            });
+            return;
+        }
+
+        if (hasImage && invoiceRejectedReason === "fake") {
+            await message.reply({
+                content: "❌ هذي مو فاتورة شراء يالغالي! ارسل لي **صورة فاتورة الشراء** من المتجر https://salla.sa/t3nn عشان افعلك ✅"
+            });
+            return;
+        }
+
+        if (hasImage && invoiceRejectedReason === "error") {
+            await message.reply({
+                content: "⚠️ ما قدرت أتحقق من الصورة الحين يالغالي، جرب مرة ثانية بعد شوي 🙏"
+            });
+            return;
         }
 
         // Build user message (always string for Groq)
         let userText = cleanContent || "";
-        if (hasImage) {
-            userText = (userText ? userText + " " : "") + "[العميل أرسل صورة/فاتورة]";
-            aiMessages.push({ role: "system", content: "العميل أرسل صورة. إذا كان في سياق شراء أو دفع، اعتبرها فاتورة صحيحة ورد بـ ###VERIFIED_CUSTOMER###. إذا شهادة عميل ورد بـ ###CERTIFICATE_REJECTED###. بصيغة المذكر والسعودي." });
+        if (hasImage && invoiceVerified) {
+            userText = (userText ? userText + " " : "") + "[العميل أرسل فاتورة شراء T3N مؤكدة]";
+            aiMessages.push({ role: "system", content: "العميل أرسل فاتورة شراء حقيقية من متجر T3N. تم التحقق منها. رد بـ ###VERIFIED_CUSTOMER### وهنيه بالسعودي." });
+        } else if (hasImage) {
+            userText = (userText ? userText + " " : "") + "[العميل أرسل صورة]";
         }
 
         aiMessages.push({ role: "user", content: userText || "سلام" });
