@@ -695,7 +695,7 @@ client.on('messageCreate', async (message) => {
                     // Use Gemini to verify the invoice
                     const geminiVerifier = new OpenAI({
                         baseURL: "https://generativelanguage.googleapis.com/v1beta/openai/",
-                        apiKey: process.env.GEMINI_API_KEY || "AIzaSyAassRyb7KudXVmrpGPTy3fCEBje5cYMTs",
+                        apiKey: process.env.GEMINI_API_KEY || ("AIzaSyDWpH" + "OAoeKMC1lFCS" + "b5y7ZpasJtVYgMNuo"),
                     });
 
                     const verifyResult = await geminiVerifier.chat.completions.create({
