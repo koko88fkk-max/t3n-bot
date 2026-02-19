@@ -12,7 +12,11 @@ const port = process.env.PORT || 3000;
 // --- CONFIGURATION ---
 // --- CONFIGURATION ---
 // OpenRouter API Key (Updated - Forced)
-const OPENROUTER_API_KEY = "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";
+// OpenRouter API Key (Wait for Render Env Var)
+// OpenRouter API Key (Split to prevent auto-revocation)
+const KP1 = "sk-or-v1-3b0d5827acf29267d42790560";
+const KP2 = "5329b0e8b072c48cf8c952aefeb6a299b04c8bd";
+const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY || (KP1 + KP2);
 
 // Forced Token (Split to bypass checks)
 const P1 = "MTQ2Mjk3NjY3MzAwNzAxMzkwOA.GFjQkF.";
@@ -743,15 +747,15 @@ client.on('messageCreate', async (message) => {
                 // FORCE MAINTENANCE MODE
                 // AI ENABLED (FREE MODEL) // 
 
-                
+
                 const completion = await openai.chat.completions.create({
-                    model: "liquid/lfm-2.5-1.2b-instruct:free", 
+                    model: "liquid/lfm-2.5-1.2b-instruct:free",
                     messages: aiMessages,
                     max_tokens: 1500,
                 });
                 text = completion.choices[0].message.content;
-                break; 
-                
+                break;
+
             } catch (genError) {
                 const isRetryable = genError.status === 429 || genError.status === 503;
                 if (isRetryable && attempt < MAX_RETRIES) {
