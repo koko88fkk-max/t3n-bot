@@ -688,52 +688,52 @@ client.on('messageCreate', async (message) => {
         }
 
         if (hasImage) {
-            console.log(`📸 Image detected from ${message.author.tag}, verifying with Gemini...`);
-
+            console.log(`📸 Image detected from ${message.author.tag}, verifying with Groq Vision...`);
+            
             try {
                 // 1. Download image
                 const imgResponse = await fetch(attachment.url);
                 const imgBuffer = Buffer.from(await imgResponse.arrayBuffer());
                 const base64Data = imgBuffer.toString("base64");
+                const dataURL = `data:${mimeType};base64,${base64Data}`;
 
-                // 2. Prepare Gemini API Call
-                const geminiKey = process.env.GEMINI_API_KEY || ("AIzaSyDWpH" + "OAoeKMC1lFCS" + "b5y7ZpasJtVYgMNuo");
-                const controller = new AbortController();
-                const timeout = setTimeout(() => controller.abort(), 15000); // 15s timeout
-
-                // 3. Send to Gemini
-                const geminiRes = await fetch(
-                    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=${geminiKey}`,
-                    {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        signal: controller.signal,
-                        body: JSON.stringify({
-                            contents: [{
-                                parts: [
-                                    { text: "حلل الصورة: هل هي فاتورة شراء/تحويل لمتجر T3N ؟\nالشروط: اسم T3N أو t3nn + مبلغ + تاريخ.\nاذا فاتورة صحيحة رد: INVOICE_VALID\nاذا شهادة عميل/شكر رد: CERTIFICATE\nاذا أي شي ثاني رد: INVOICE_FAKE\nرد بكلمة واحدة فقط." },
-                                    { inline_data: { mime_type: mimeType, data: base64Data } }
+                // 2. Use Groq Vision (Much faster & reliable)
+                const visionKey = process.env.GROQ_API_KEY || (QK1 + QK2 + QK3);
+                
+                const visionRes = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${visionKey}`
+                    },
+                    body: JSON.stringify({
+                        model: "llama-3.2-90b-vision-preview",
+                        messages: [
+                            {
+                                role: "user",
+                                content: [
+                                    { type: "text", text: "Analyze this image. Is it a purchase receipt/invoice for 'T3N' store? Search for 'T3N', 't3nn', 'salla.sa' and a price/amount. \n- If it is a VALID T3N INVOICE, reply exactly: INVOICE_VALID\n- If it is a T3N Customer Certificate (has 'Certificate' or 'شهادة'), reply exactly: CERTIFICATE\n- If it is random image/gameplay/not invoice, reply exactly: INVOICE_FAKE\nReply with ONE WORD ONLY." },
+                                    { type: "image_url", image_url: { url: dataURL } }
                                 ]
-                            }],
-                            generationConfig: { maxOutputTokens: 20 }
-                        })
-                    }
-                );
-                clearTimeout(timeout);
+                            }
+                        ],
+                        max_tokens: 15,
+                        temperature: 0.1
+                    })
+                });
 
-                // 4. Process Result
-                const geminiData = await geminiRes.json();
-
-                if (geminiData.error) {
-                    console.log(`⚠️ Gemini Error: ${geminiData.error.message}`);
+                const visionData = await visionRes.json();
+                
+                if (visionData.error) {
+                    console.log(`⚠️ Vision Error: ${visionData.error.message}`);
                     invoiceRejectedReason = "error";
                 } else {
-                    const verifyText = (geminiData.candidates?.[0]?.content?.parts?.[0]?.text || "").trim().toUpperCase();
-                    console.log(`🔍 Gemini Result: ${verifyText}`);
+                    const verifyText = (visionData.choices?.[0]?.message?.content || "").trim().toUpperCase();
+                    console.log(`🔍 Groq Result: ${verifyText}`);
 
                     if (verifyText.includes("INVOICE_VALID") || verifyText.includes("VALID")) {
                         invoiceVerified = true;
-                    } else if (verifyText.includes("CERTIFICATE")) {
+                    } else if (verifyText.includes("CERTIFICATE") || verifyText.includes("شهادة")) {
                         invoiceRejectedReason = "certificate";
                     } else {
                         invoiceRejectedReason = "fake";
@@ -741,7 +741,8 @@ client.on('messageCreate', async (message) => {
                 }
 
             } catch (err) {
-                console.log(`⚠️ Verify Failed: ${err.message}`);
+                console.log(`⚠️ Vision Failed: ${err.message}`);
+                // Safer to error out than accept fakes
                 invoiceRejectedReason = "error";
             }
         }
