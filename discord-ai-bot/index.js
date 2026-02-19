@@ -14,8 +14,8 @@ const port = process.env.PORT || 3000;
 // OpenRouter API Key (Updated - Forced)
 // OpenRouter API Key (Wait for Render Env Var)
 // OpenRouter API Key (Split to prevent auto-revocation)
-const KP1 = "sk-or-v1-3b0d5827acf29267d42790560";
-const KP2 = "5329b0e8b072c48cf8c952aefeb6a299b04c8bd";
+const KP1 = "sk-or-v1-e402c9fb7fc59b2b5bc9762797";
+const KP2 = "e350953b387a1a72e51c5a2cda463d464efdcb";
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY || (KP1 + KP2);
 
 // Forced Token (Split to bypass checks)
