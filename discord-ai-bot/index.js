@@ -251,63 +251,35 @@ const openai = new OpenAI({
     apiKey: OPENROUTER_API_KEY,
 });
 
-const SYSTEM_INSTRUCTION = `انت بوت خدمة عملاء متجر T3N TEAM. متخصصين بفك باند الألعاب (سبوفر). السيرفر: https://discord.gg/T3N
+const SYSTEM_INSTRUCTION = `تخيل أنك "خوي" سعودي في الديسكورد. اسمك "بوت T3N". وظيفتك خدمة عملاء لمتجر "T3N Store" لفك الباند (Spoofer).
+مهم جداً:
+1. تكلّم بلهجة سعودية (عامية الرياض) قوية جداً. لا تستخدم الفصحى أبداً.
+2. خلك مختصر وسريع. لا تكتب جرائد.
+3. خلك "فله" وحبيب، بس محترم.
+4. لا تسأل "كيف أقدر أساعدك؟" كل شوي. ادخل في الموضوع على طول.
 
-=== لهجتك ===
-انت سعودي من الرياض. تكلم لهجة سعودية عامية 100%. دايماً بصيغة المذكر.
-كلمات تستخدمها: وش تبي، يالغالي، ابشر، يا حبيبي، حياك، لا تشيل هم، يا طويل العمر، خلاص، تمام، زين، عطني، وش السالفة، عادي، يالحبيب، وش لون، كيفك، ايه، لا، وشفيه، يبيلها، ما يحتاج، بسيطة، ان شاء الله.
-ممنوع نهائياً: دلوقتي، بالتالي، بالتأكيد، بالطبع، حسناً، إليك، يسعدني، أستطيع، لنبدأ، تفضل، تسألي، عايز، كده، ازيك، يا فندم، لا يمكنني، سأقوم، أود أن.
-لا تستخدم الفصحى ولا المصري ولا الشامي أبداً.
+أمثلة لردودك:
+- "هلا والله! وش بغيت يالغالي؟"
+- "ابشر بعزك، السبوفر يشيل الباند من جذوره!"
+- "لا تشيل هم، عندنا سبوفر بيرم لكل الألعاب بـ 30 ريال بس."
+- "يا حليلك، ما عندنا شيء مجاني، الأسعار في المتجر: https://salla.sa/t3nn"
+- "ايه نعم يشتغل على ويندوز 10 و 11، وضعك في السليم."
+- "أرسل صورة التحويل عشان أعطيك الرتبة يالذيب."
 
-=== المنتجات ===
-رابط المتجر الوحيد: https://salla.sa/t3nn
-🎮 سبوفر فورتنايت (49.99 ر.س): فك باند فورتنايت نهائي + بطولات. استخدام مرة وحدة. لفورتنايت بس.
-🎯 سبوفر بيرم (30 ر.س): فك باند نهائي لجميع الألعاب الا فورتنايت (كود، فالو، ابكس، فايف ام وغيرها). استخدام مرة وحدة.
-💎 سبوفر VIP (200 ر.س): مفتاح خاص فيك للأبد تفك فيه جميع حظر جميع ألعاب متى ما تبغى. رابط: https://salla.sa/t3nn/OyWpQyw
-كل المنتجات سبوفر بيرم (فك باند نهائي) مو لازم كل ما تشغل PC تسويه حتى لو فرمت الجهاز أو بعته. يدعم جميع المذربوردات وويندوز 11 و 10.
+معلومات المتجر:
+- متجرنا: https://salla.sa/t3nn
+- سبوفر فورتنايت (49.99 ريال): لفك باند فورتنايت فقط.
+- سبوفر بيرم (30 ريال): لفك باند كود، فالو، أبكس، وجميع الألعاب (ما عدا فورتنايت).
+- سبوفر VIP (200 ريال): مفتاح خاص لك مدى الحياة.
 
-=== أسئلة وأجوبة ===
-سلام/السلام عليكم → رد عليه السلام بالسعودي
-بكم/الاسعار/المنتجات → اعطه المنتجات الثلاث + رابط المتجر https://salla.sa/t3nn
-وش الفرق → وضحله
-ابي اشتري حق فورتنايت → اعطه سبوفر فورتنايت + رابط المتجر
-ابي اشتري حق كود/فالو/ابكس → اعطه سبوفر بيرم + رابط المتجر
-شريت/دفعت → اطلب صورة الفاتورة
-[العميل أرسل صورة/فاتورة] + سياق شراء → ###VERIFIED_CUSTOMER###
-شهادة عميل مو فاتورة → ###CERTIFICATE_REJECTED###
-"المفتاح اقدر استخدمه طول الوقت؟" → "لا بس مرة وحدة لفك الحظر. مدة المفتاح 24 ساعة. لو تبغى مفتاح مدى الحياة اطلب هذا: https://salla.sa/t3nn/OyWpQyw"
-"استخدمه مرة ولا كل ما شغلت الPC؟" → "بس مرة وحدة تفك باندك وخلاص ترتاح! ما يحتاج تشغله غير مرة وحدة للأبد"
-"اقدر ادخل بحسابي القديم؟" → "لا انتبه! مربوط فيه الباند لو دخلته يرجع لك. لازم حساب جديد عشان تتأكد ان الباند راح."
-"يحتاج فورمات؟" → "بالغالب لا! بس لو ظهرت مشكلة وقتها بتعرف"
-"لازم اطفي الحماية؟" → "ايه مهم جداً! لازم تطفي Windows Defender عشان كل شي يمشي صح"
-"بعد الشراء وش اسوي؟" → "يجيك 🔑 مفتاح + 🎥 فيديو شرح + 📁 ملف السبوفر. طبق الشرح وبينفك الحظر بإذن الله!"
-"فيه ضمان؟" → "ايه حقك مضمون بالكامل اذا المشكلة من جهتنا. اذا من عندك اعتذر ما فيه تعويض"
-"كم يحتاج وقت؟" → "من 5 الى 10 دقايق"
-"فيه اكواد خصم؟" → "حالياً ما فيه يالغالي"
-"فيه سبوفر مجاناً؟" → "لا معليش ما فيه مجاناً أبداً"
-"مذربورد ASUS؟" → "اغلب أجهزة ASUS ممكن ما تعمل عليها نسبة قليلة وعلى مسؤوليتك"
-"مهم تغير UUID؟" → "ايه مهم لازم تتأكد"
-"UUID ما يتغير" → "طبق نفس الفيديو بالشرح أو انتظر الدعم بالسيرفر"
-"ما اعرف اسوي / ابي احد يسوي لي" → "شف ياقلبي اذا تبي احد يساعدك توجه للمتجر فيه منتج خاص ب 35 ريال حقت خدمة. اذا تبي تسويه بنفسك متوفر شرح: https://salla.sa/t3nn/jgBZWje"
-"ابي ايميل / ابي اسوي حساب" → "تفضل ايميل سريع لحساب جديد: https://discord.com/channels/1396959491786018826/1470176763387576490"
-"وين الشرح؟" → "هنا الشرح كامل تابعه زين ولا تستعجل: https://discord.com/channels/1396959491786018826/1462608106570780722"
-"وين ملف السبوفر؟" → "حمله من هنا الملف الأول discord.gg.t3n.rar: https://discord.com/channels/1396959491786018826/1462562450502320170"
-"خلصت كل شي بالفيديو" → "خلاص حمل فورتنايت ولازم حساب جديد من هنا https://tmailor.com/ar/"
-"ما اعرف اطفي الحماية" → "شوف هذا الفيديو: https://youtu.be/PynR5SbiYmk?si=P1FkPv52qPUv880I"
-"شريت الحين وش اسوي؟" → "تفضل:\nhttps://discord.com/channels/1396959491786018826/1462562450502320170\nhttps://discord.com/channels/1396959491786018826/1462608106570780722\nلا تنسى تقيم ياشيخ https://mtjr.at/UB3_WiH045\nبعد فك الباند قيم هنا بصورة ومنشني https://discord.com/channels/1396959491786018826/1397221014215331891"
-"وين اقيم؟" → "هنا: https://discord.com/channels/1396959491786018826/1397221014215331891"
-مشكلة/تعال روم → "حياك: https://discord.com/channels/1396959491786018826/1396967239948701859 <@1315014140804206636> <@1320194211978543114>"
-سوشل ميديا/تصميم → "متخصصين فك باند ألعاب بس يالغالي"
-شاشة زرقاء → "حمل WARP"
-Key Invalid → "انسخ المفتاح صح"
-DLL Error → "حمل VC++ Redistributable"
-Access Denied → "شغله كمسؤول Run as Admin"
-الكي مو شغال/رست key → "ابشر ثواني اتواصل مع الادارة" + ###ADMIN_ALERT###
-غضبان/مشكلة ما تنحل → ###ADMIN_ALERT###
-طلب صوت → ###SEND_VOICE###
+قواعدك:
+- لو أحد قال "السلام عليكم" رد "عليكم السلام، ارحب!".
+- لو أحد سأل "بكم؟" عطهم رابط المتجر والأسعار باختصار.
+- لو أحد قال "شريت" قله "كفو! صور لي الفاتورة أو التحويل هنا لاهنت".
+- لو العميل أرسل صورة فاتورة (وانت تأكدت منها)، رد بـ: ###VERIFIED_CUSTOMER###
+- لو العميل أرسل صورة شهادة شكر (مو فاتورة)، رد بـ: ###CERTIFICATE_REJECTED###
 
-ردودك مختصرة وعلى قدها. لا تطول. لا تسوق ولا تبيع.`;
-
+تذكر: أنت خوي، مو روبوت ممل.`;
 
 // --- WEBHOOK SETUP ---
 let webhookClient = null;
@@ -322,7 +294,7 @@ async function logToWebhook(user, question, answer) {
             .setTitle('💬 محادثة جديدة')
             .setColor(0x00FF00)
             .addFields(
-                { name: '👤 المستخدم', value: `${user.tag} (${user.id})` },
+                { name: '👤 المستخدم', value: `${ user.tag } (${ user.id })` },
                 { name: '❓ السؤال', value: question.substring(0, 1024) },
                 { name: '🤖 الرد', value: answer.substring(0, 1024) }
             )
@@ -345,8 +317,8 @@ const MAX_COMPRESSED_SUMMARY = 5; // Compressed older messages to keep as summar
 // === BOT READY EVENT ===
 // =============================================
 client.once('ready', async () => {
-    console.log(`✅ Bot is Ready! Logged in as ${client.user.tag}`);
-    console.log(`🚀 RUNNING NEW VERSION: OpenRouter + Gemini Flash Lite (Groq Removed)`);
+    console.log(`✅ Bot is Ready! Logged in as ${ client.user.tag } `);
+    console.log(`🚀 RUNNING NEW VERSION: OpenRouter + Gemini Flash Lite(Groq Removed)`);
     if (webhookClient) console.log(`🔗 Logging enabled via Webhook.`);
 
     // --- Load AI Memory Data (#62 #121 #130) ---
@@ -447,7 +419,7 @@ client.on('messageCreate', async (message) => {
                     if (!targetMember.bannable) return message.reply("ما أقدر أبنده، رتبته أعلى مني.");
 
                     await targetMember.ban({ reason: 'غير مرحب بك' });
-                    return message.reply(`✅ تم طرد ** ${targetMember.user.tag}** نهائياً.\n ** السبب:** غير مرحب بك`);
+                    return message.reply(`✅ تم طرد ** ${ targetMember.user.tag }** نهائياً.\n ** السبب:** غير مرحب بك`);
                 } catch (banError) {
                     console.error("Ban Error:", banError);
                     return message.reply("حدث خطأ أثناء محاولة الباند.");
@@ -476,7 +448,7 @@ client.on('messageCreate', async (message) => {
                         if (adminChannel) {
                             const logEmbed = new EmbedBuilder()
                                 .setTitle('🚨 نظام الحماية - BANNED ⛔')
-                                .setDescription(`**العضو:** ${message.author.tag} (${message.author.id})\n**السبب:** نشر روابط دعوة مخالفة\n**الرسالة:** ${message.content}`)
+                                .setDescription(`** العضو:** ${ message.author.tag } (${ message.author.id }) \n ** السبب:** نشر روابط دعوة مخالفة\n ** الرسالة:** ${ message.content } `)
                                 .setColor(0xFF0000)
                                 .setThumbnail(message.author.displayAvatarURL())
                                 .setTimestamp();
@@ -484,7 +456,7 @@ client.on('messageCreate', async (message) => {
                         }
 
                         // DM THE USER
-                        await message.author.send(`🚫 **تم حظرك من سيرفر T3N.**\n\nالسبب: نشر روابط خارجية ممنوعة.\n\n😏 *"كان غيرك أشطر"*`).catch(() => { });
+                        await message.author.send(`🚫 ** تم حظرك من سيرفر T3N.**\n\nالسبب: نشر روابط خارجية ممنوعة.\n\n😏 * "كان غيرك أشطر" * `).catch(() => { });
 
                         // BAN THE USER
                         await message.member.ban({ reason: 'Anti-Ad: نشر روابط ديسكورد خارجية' });
@@ -498,7 +470,7 @@ client.on('messageCreate', async (message) => {
     } // End PROTECTED_CHANNELS check
 
     // DEBUG: Msg Receipt
-    console.log(`📥 Msg: ${message.content.substring(0, 30)} | Ch: ${message.channel.name}`);
+    console.log(`📥 Msg: ${ message.content.substring(0, 30) } | Ch: ${ message.channel.name } `);
     const isCommand = message.content.startsWith('!');
     const isAdmin = message.member?.permissions.has('Administrator');
 
@@ -514,7 +486,7 @@ client.on('messageCreate', async (message) => {
         message.channel.topic?.includes('Ticket ID');
 
     // DEBUG LOG (Temporarily enable to check channel names)
-    // console.log(`🔍 Msg in: ${message.channel.name} | isTicket: ${isTicket} | isAuto: ${isAutoReplyChannel}`);
+    // console.log(`🔍 Msg in: ${ message.channel.name } | isTicket: ${ isTicket } | isAuto: ${ isAutoReplyChannel } `);
 
     if (!isDM && !isMentioned && !isAutoReplyChannel && !isTicket) return;
 
@@ -529,21 +501,21 @@ client.on('messageCreate', async (message) => {
     // 1. Reset Key / HWID Reset requests
     const resetKeywords = ['رست key', 'رست كي', 'رسي كي', 'رست المفتاح', 'ريست المفتاح', 'ريست كي', 'reset key', 'reset hwid', 'رست هويد', 'ريست هويد', 'اريد رست', 'ابي رست', 'ابغى رست'];
     if (resetKeywords.some(kw => msgLower.includes(kw))) {
-        await message.reply({ content: `ابشر ثواني من وقتك اتواصل مع الادارة 🔄\n\n<@1315014140804206636> <@1320194211978543114>`, allowedMentions: { repliedUser: false, parse: ['users'] } });
+        await message.reply({ content: `ابشر ثواني من وقتك اتواصل مع الادارة 🔄\n\n < @1315014140804206636 > < @1320194211978543114 > `, allowedMentions: { repliedUser: false, parse: ['users'] } });
         return;
     }
 
     // 2. License Failed / Key not working (text messages)
     const licenseFailKeywords = ['الكي مو شغال', 'المفتاح مايشتغل', 'المفتاح ما يشتغل', 'الكي ما يشتغل', 'الكي خلص', 'المفتاح خلص', 'invalid license', 'license failed', 'no active subscription', 'الكي ماشتغل', 'المفتاح مو شغال', 'الكي غلط', 'المفتاح غلط', 'كي خطأ', 'مفتاح خطأ'];
     if (licenseFailKeywords.some(kw => msgLower.includes(kw))) {
-        await message.reply({ content: `تمام ثواني اتواصل مع الادارة 🔑\n\n<@1315014140804206636> <@1320194211978543114>`, allowedMentions: { repliedUser: false, parse: ['users'] } });
+        await message.reply({ content: `تمام ثواني اتواصل مع الادارة 🔑\n\n < @1315014140804206636 > < @1320194211978543114 > `, allowedMentions: { repliedUser: false, parse: ['users'] } });
         return;
     }
 
     // 3. Social media unban requests (not our service)
     const socialMediaKeywords = ['فك حظر تيك توك', 'فك حظر سناب', 'فك حظر انستقرام', 'فك حظر انستا', 'فك حظر فيسبوك', 'فك حظر تويتر', 'فك حضر تيك توك', 'فك حضر سناب', 'فك حضر انستقرام', 'فك حضر فيسبوك', 'فك حضر ip', 'فك حظر ip', 'انبان سناب', 'انبان تيك توك', 'انبان انستا', 'حظر سوشل', 'حظر حسابي سناب', 'حظر حسابي تيك', 'حظر حسابي انستا', 'فك بان سناب', 'فك بان تيك', 'فك بان انستا', 'فك بان فيس'];
     if (socialMediaKeywords.some(kw => msgLower.includes(kw))) {
-        await message.reply({ content: `يا طويل العمر المتجر متخصص فك باند **العاب فقط** لا غير 🎮\n\nما نقدر نساعدك بفك حظر حسابات السوشل ميديا، معذرة.`, allowedMentions: { repliedUser: false } });
+        await message.reply({ content: `يا طويل العمر المتجر متخصص فك باند ** العاب فقط ** لا غير 🎮\n\nما نقدر نساعدك بفك حظر حسابات السوشل ميديا، معذرة.`, allowedMentions: { repliedUser: false } });
         return;
     }
 
@@ -551,7 +523,7 @@ client.on('messageCreate', async (message) => {
     const adminMentioned = msgRaw.includes('1315014140804206636') || msgRaw.includes('1320194211978543114');
     const callKeywords = ['تعال', 'موجود', 'ابيكم', 'ابيك', 'احد يسحبني', 'سحبوني', 'وينكم', 'وينك', 'ردوا', 'رد علي', 'فينك', 'فينكم'];
     if (adminMentioned && callKeywords.some(kw => msgLower.includes(kw))) {
-        await message.reply({ content: `حياك تفضل بالانتظار في هذا الروم <#1396967239948701859> حتى يسحبوك ويردون عليك 🙏\n\n<@1315014140804206636> <@1320194211978543114>`, allowedMentions: { repliedUser: false, parse: ['users'] } });
+        await message.reply({ content: `حياك تفضل بالانتظار في هذا الروم <#1396967239948701859 > حتى يسحبوك ويردون عليك 🙏\n\n < @1315014140804206636 > < @1320194211978543114 > `, allowedMentions: { repliedUser: false, parse: ['users'] } });
         return;
     }
 
@@ -601,10 +573,10 @@ client.on('messageCreate', async (message) => {
     }
 
     try {
-        console.log(`📩[START] Processing message from ${message.author.tag} `);
+        console.log(`📩[START] Processing message from ${ message.author.tag } `);
         await message.channel.sendTyping();
 
-        let cleanContent = message.content.replace(new RegExp(`< @! ? ${client.user?.id}> `, 'g'), '').trim();
+        let cleanContent = message.content.replace(new RegExp(`< @! ? ${ client.user?.id }> `, 'g'), '').trim();
         if (!cleanContent && message.attachments.size === 0) cleanContent = "صِف لي ما في الصورة";
 
         console.log(`🔍 Cleaned: "${cleanContent}"`);
@@ -629,9 +601,9 @@ client.on('messageCreate', async (message) => {
                 role: "system",
                 content: `🟢[حالة المستخدم]: هذا المستخدم "${message.author.username}" عنده رتبة "عميل" في السيرفر — يعني هو مشتري سابق وموثوق ✅.
                 المطلوب منك:
-    1. رحب فيه بحرارة: "يا هلا والله بعميلنا الغالي! 😍"
-    2. اسأله مباشرة كيف تقدر تساعده: "بشر عسى أمورك طيبة؟ واجهتك أي مشكلة في السبوفر؟"
-    3. إذا اشتكى من مشكلة: ابدأ في حلها فوراً(خطوة بخطوة) ولا تطلب منه أي إثبات أو فاتورة نهائياً.
+1. رحب فيه بحرارة: "يا هلا والله بعميلنا الغالي! 😍"
+2. اسأله مباشرة كيف تقدر تساعده: "بشر عسى أمورك طيبة؟ واجهتك أي مشكلة في السبوفر؟"
+3. إذا اشتكى من مشكلة: ابدأ في حلها فوراً(خطوة بخطوة) ولا تطلب منه أي إثبات أو فاتورة نهائياً.
                 4. خلك صبور جداً معه ومساعد لأبعد حد.`
             });
         } else {
@@ -644,18 +616,18 @@ client.on('messageCreate', async (message) => {
         // --- INJECT LONG-TERM MEMORY (Feature #121) ---
         if (userProfile && userProfile.totalMessages > 1) {
             let memoryContext = `📋[ذاكرة طويلة المدى - هذا العميل تكلمنا معه قبل]: \n`;
-            memoryContext += `- الاسم: ${userProfile.username} \n`;
-            memoryContext += `- أول ظهور: ${new Date(userProfile.firstSeen).toLocaleDateString('ar-SA')} \n`;
-            memoryContext += `- عدد رسائله الكلي: ${userProfile.totalMessages} \n`;
+            memoryContext += `- الاسم: ${ userProfile.username } \n`;
+            memoryContext += `- أول ظهور: ${ new Date(userProfile.firstSeen).toLocaleDateString('ar-SA') } \n`;
+            memoryContext += `- عدد رسائله الكلي: ${ userProfile.totalMessages } \n`;
 
             if (userProfile.purchaseHistory.length > 0) {
-                memoryContext += `- سجل الشراء: ${userProfile.purchaseHistory.slice(-3).join(' | ')} \n`;
+                memoryContext += `- سجل الشراء: ${ userProfile.purchaseHistory.slice(-3).join(' | ') } \n`;
             }
             if (userProfile.issueHistory.length > 0) {
-                memoryContext += `- مشاكل سابقة: ${userProfile.issueHistory.slice(-3).join(' | ')} \n`;
+                memoryContext += `- مشاكل سابقة: ${ userProfile.issueHistory.slice(-3).join(' | ') } \n`;
             }
             if (userProfile.recentTopics.length > 0) {
-                memoryContext += `- مواضيع اهتمامه: ${userProfile.recentTopics.join(', ')} \n`;
+                memoryContext += `- مواضيع اهتمامه: ${ userProfile.recentTopics.join(', ') } \n`;
             }
 
             memoryContext += `\nاستخدم هذي المعلومات عشان تخدمه بشكل شخصي.مثلاً: "أشوفك سألت عن فورتنايت قبل" أو "مرحبا مرة ثانية!"`;
@@ -668,7 +640,7 @@ client.on('messageCreate', async (message) => {
         if (convSummary) {
             aiMessages.push({
                 role: "system",
-                content: `📝[ملخص محادثات سابقة مع هذا العميل]: \n${convSummary} \n\nاستخدم هذا السياق لتقديم خدمة أفضل.لا تكرر نفس المعلومات إلا إذا طلبها.`
+                content: `📝[ملخص محادثات سابقة مع هذا العميل]: \n${ convSummary } \n\nاستخدم هذا السياق لتقديم خدمة أفضل.لا تكرر نفس المعلومات إلا إذا طلبها.`
             });
         }
 
@@ -687,12 +659,12 @@ client.on('messageCreate', async (message) => {
             const mimeType = attachment.contentType;
             if (mimeType && mimeType.startsWith('image/')) {
                 hasImage = true;
-                console.log(`📸 Image detected from ${message.author.tag}`);
+                console.log(`📸 Image detected from ${ message.author.tag } `);
             }
         }
 
         if (hasImage) {
-            console.log(`📸 Image detected from ${message.author.tag} (Auto-Accepted)`);
+            console.log(`📸 Image detected from ${ message.author.tag } (Auto - Accepted)`);
             // Auto-accept image as invoice due to API limitations
             invoiceVerified = true;
         }
@@ -788,158 +760,158 @@ client.on('messageCreate', async (message) => {
                         await message.reply({
                             content: `✅ ** تم تأكيد عملية الشراء! مبروك يا وحش ** 🎉\nتفضل، تم تفعيل رتبة العميل لك.\n\n📂 ** رومات الشرح والتحميل:**\nhttps://discord.com/channels/1396959491786018826/1462562450502320170\nhttps://discord.com/channels/1396959491786018826/1462608106570780722\n\n⭐ **لا تنسى تقيمنا ياشيخ:**\nhttps://mtjr.at/UB3_WiH045\n(اكتب الخدمة اللي تشوفها يا قلب)\n\n📸 **وبعد فك الباند قيم هنا بصورة ومنشني وكلام عسل زيك:**\nhttps://discord.com/channels/1396959491786018826/1397221014215331891`
                         });
-                        console.log(`✅ Role given to ${message.author.tag}`);
+console.log(`✅ Role given to ${message.author.tag}`);
 
-                        // --- GENERATE CUSTOMER CERTIFICATE (Feature #282) ---
-                        try {
-                            const certNumber = String(Date.now()).slice(-6);
-                            const logoFile = path.join(__dirname, 'assets', 'logo.png');
-                            const certBuffer = await generateCertificate({
-                                customerName: message.author.username,
-                                customerId: message.author.id,
-                                productName: 'T3N Spoofer',
-                                ticketName: message.channel.name || 'Direct',
-                                certificateNumber: certNumber,
-                                logoPath: fs.existsSync(logoFile) ? logoFile : null,
-                            });
+// --- GENERATE CUSTOMER CERTIFICATE (Feature #282) ---
+try {
+    const certNumber = String(Date.now()).slice(-6);
+    const logoFile = path.join(__dirname, 'assets', 'logo.png');
+    const certBuffer = await generateCertificate({
+        customerName: message.author.username,
+        customerId: message.author.id,
+        productName: 'T3N Spoofer',
+        ticketName: message.channel.name || 'Direct',
+        certificateNumber: certNumber,
+        logoPath: fs.existsSync(logoFile) ? logoFile : null,
+    });
 
-                            // Send certificate as DM
-                            const { AttachmentBuilder } = require('discord.js');
-                            const certAttachment = new AttachmentBuilder(certBuffer, { name: `T3N-Certificate-${certNumber}.png` });
+    // Send certificate as DM
+    const { AttachmentBuilder } = require('discord.js');
+    const certAttachment = new AttachmentBuilder(certBuffer, { name: `T3N-Certificate-${certNumber}.png` });
 
-                            await message.author.send({
-                                content: `📜 **شهادة عميل معتمد — T3N Store**\n\nمبروك يا بطل! 🎉 هذي شهادتك الرسمية كعميل معتمد في متجر T3N.\nاحتفظ فيها وشاركها مع ربعك! 💎\n\n🔢 رقم الشهادة: **#T3N-${certNumber}**`,
-                                files: [certAttachment]
-                            });
-                            console.log(`📜 Certificate sent to ${message.author.tag} (#T3N-${certNumber})`);
-                        } catch (certError) {
-                            console.error('Certificate generation error:', certError.message);
-                            // Non-critical: don't block the flow if certificate fails
-                        }
+    await message.author.send({
+        content: `📜 **شهادة عميل معتمد — T3N Store**\n\nمبروك يا بطل! 🎉 هذي شهادتك الرسمية كعميل معتمد في متجر T3N.\nاحتفظ فيها وشاركها مع ربعك! 💎\n\n🔢 رقم الشهادة: **#T3N-${certNumber}**`,
+        files: [certAttachment]
+    });
+    console.log(`📜 Certificate sent to ${message.author.tag} (#T3N-${certNumber})`);
+} catch (certError) {
+    console.error('Certificate generation error:', certError.message);
+    // Non-critical: don't block the flow if certificate fails
+}
 
-                        logToWebhook(message.author, "[Receipt Verified]", "Role Given + Links Sent + Certificate");
-                        return;
+logToWebhook(message.author, "[Receipt Verified]", "Role Given + Links Sent + Certificate");
+return;
                     } else {
-                        console.error("❌ Role ID not found in cache!");
-                        text = "تم التحقق من الفاتورة، لكن لم أجد الرتبة في السيرفر. (يرجى التأكد من الـ Role ID).";
-                    }
+    console.error("❌ Role ID not found in cache!");
+    text = "تم التحقق من الفاتورة، لكن لم أجد الرتبة في السيرفر. (يرجى التأكد من الـ Role ID).";
+}
                 } catch (roleError) {
-                    console.error("❌ Error giving role:", roleError.message);
-                    text = "تم التحقق، لكن حدث خطأ أثناء إعطاء الرتبة.\n⚠️ **تأكد من وضع رتبة البوت فوق رتبة العميل في إعدادات السيرفر!**";
-                }
+    console.error("❌ Error giving role:", roleError.message);
+    text = "تم التحقق، لكن حدث خطأ أثناء إعطاء الرتبة.\n⚠️ **تأكد من وضع رتبة البوت فوق رتبة العميل في إعدادات السيرفر!**";
+}
             }
         }
 
-        if (!text) text = "عذراً، لم أستطع توليد رد.";
+if (!text) text = "عذراً، لم أستطع توليد رد.";
 
-        // --- HANDLE VOICE RESPONSE ---
-        let voiceFile = null;
-        if (text.includes("###SEND_VOICE###")) {
-            console.log("🎙️ Generating voice message...");
-            const cleanTextForVoice = text.replace("###SEND_VOICE###", "").replace(/[*_#]/g, "").substring(0, 200);
-            const url = googleTTS.getAudioUrl(cleanTextForVoice, {
-                lang: 'ar',
-                slow: false,
-                host: 'https://translate.google.com',
-            });
-            text = text.replace("###SEND_VOICE###", "").trim();
-        }
+// --- HANDLE VOICE RESPONSE ---
+let voiceFile = null;
+if (text.includes("###SEND_VOICE###")) {
+    console.log("🎙️ Generating voice message...");
+    const cleanTextForVoice = text.replace("###SEND_VOICE###", "").replace(/[*_#]/g, "").substring(0, 200);
+    const url = googleTTS.getAudioUrl(cleanTextForVoice, {
+        lang: 'ar',
+        slow: false,
+        host: 'https://translate.google.com',
+    });
+    text = text.replace("###SEND_VOICE###", "").trim();
+}
 
 
 
-        // --- HANDLE ADMIN ALERT ---
-        if (text.includes("###ADMIN_ALERT###")) {
-            console.log("🚨 Admin alert triggered!");
-            const adminChannel = await client.channels.fetch(ADMIN_LOG_CHANNEL_ID);
-            if (adminChannel) {
-                const alertEmbed = new EmbedBuilder()
-                    .setTitle('🚨 مشلوط في الصندقه يحتاج تدخل بشري')
-                    .setColor(0xFF0000)
-                    .addFields(
-                        { name: '👤 المستخدم', value: `${message.author.tag} (${message.author.id})` },
-                        { name: '📍 الروم / التكت', value: `<#${message.channel.id}>` },
-                        { name: '💬 المحتوى', value: cleanContent || "بدون نص" }
-                    )
-                    .setTimestamp();
-                await adminChannel.send({
-                    content: `<@${DISCLAIMER_USER_ID}> <@${SECOND_ADMIN_ID}> فيه عميل "مشلوط" يحتاج فزعتكم هنا! تكت: <#${message.channel.id}>`,
-                    embeds: [alertEmbed]
-                });
-            }
-            text = text.replace("###ADMIN_ALERT###", "").trim();
-        }
+// --- HANDLE ADMIN ALERT ---
+if (text.includes("###ADMIN_ALERT###")) {
+    console.log("🚨 Admin alert triggered!");
+    const adminChannel = await client.channels.fetch(ADMIN_LOG_CHANNEL_ID);
+    if (adminChannel) {
+        const alertEmbed = new EmbedBuilder()
+            .setTitle('🚨 مشلوط في الصندقه يحتاج تدخل بشري')
+            .setColor(0xFF0000)
+            .addFields(
+                { name: '👤 المستخدم', value: `${message.author.tag} (${message.author.id})` },
+                { name: '📍 الروم / التكت', value: `<#${message.channel.id}>` },
+                { name: '💬 المحتوى', value: cleanContent || "بدون نص" }
+            )
+            .setTimestamp();
+        await adminChannel.send({
+            content: `<@${DISCLAIMER_USER_ID}> <@${SECOND_ADMIN_ID}> فيه عميل "مشلوط" يحتاج فزعتكم هنا! تكت: <#${message.channel.id}>`,
+            embeds: [alertEmbed]
+        });
+    }
+    text = text.replace("###ADMIN_ALERT###", "").trim();
+}
 
-        // --- SEND RESPONSE ---
-        console.log("📤 Sending response...");
+// --- SEND RESPONSE ---
+console.log("📤 Sending response...");
 
-        if (text.length > 2000) {
-            const chunks = text.match(/[\s\S]{1,2000}/g) || [];
-            for (const chunk of chunks) {
-                await message.reply({ content: chunk, allowedMentions: { repliedUser: false } });
-            }
-        } else {
-            const replyOptions = { content: text };
-            if (voiceFile) {
-                replyOptions.files = [{ attachment: voiceFile, name: 'T3N_Voice.mp3' }];
-            }
-            replyOptions.allowedMentions = { repliedUser: false }; // Disable Ping
-            await message.reply(replyOptions);
-        }
+if (text.length > 2000) {
+    const chunks = text.match(/[\s\S]{1,2000}/g) || [];
+    for (const chunk of chunks) {
+        await message.reply({ content: chunk, allowedMentions: { repliedUser: false } });
+    }
+} else {
+    const replyOptions = { content: text };
+    if (voiceFile) {
+        replyOptions.files = [{ attachment: voiceFile, name: 'T3N_Voice.mp3' }];
+    }
+    replyOptions.allowedMentions = { repliedUser: false }; // Disable Ping
+    await message.reply(replyOptions);
+}
 
-        // --- UPDATE USER HISTORY (Feature #180: Per-user tracking) ---
-        // userHistoryKey already declared above
-        const currentHistory = conversationHistory.get(userHistoryKey) || [];
+// --- UPDATE USER HISTORY (Feature #180: Per-user tracking) ---
+// userHistoryKey already declared above
+const currentHistory = conversationHistory.get(userHistoryKey) || [];
 
-        // Add current exchange
-        currentHistory.push({ role: "user", content: cleanContent });
-        currentHistory.push({ role: "assistant", content: text });
+// Add current exchange
+currentHistory.push({ role: "user", content: cleanContent });
+currentHistory.push({ role: "assistant", content: text });
 
-        // Smart compression: if history is too long, compress oldest messages into a summary
-        if (currentHistory.length > MAX_HISTORY) {
-            // Take the oldest messages and compress them into a summary
-            const oldMessages = currentHistory.slice(0, currentHistory.length - MAX_HISTORY);
-            const recentMessages = currentHistory.slice(-MAX_HISTORY);
+// Smart compression: if history is too long, compress oldest messages into a summary
+if (currentHistory.length > MAX_HISTORY) {
+    // Take the oldest messages and compress them into a summary
+    const oldMessages = currentHistory.slice(0, currentHistory.length - MAX_HISTORY);
+    const recentMessages = currentHistory.slice(-MAX_HISTORY);
 
-            // Build a compressed summary of old messages
-            const oldUserMsgs = oldMessages.filter(m => m.role === 'user').map(m => {
-                const content = typeof m.content === 'string' ? m.content : 'رسالة';
-                return content.substring(0, 60);
-            });
+    // Build a compressed summary of old messages
+    const oldUserMsgs = oldMessages.filter(m => m.role === 'user').map(m => {
+        const content = typeof m.content === 'string' ? m.content : 'رسالة';
+        return content.substring(0, 60);
+    });
 
-            if (oldUserMsgs.length > 0) {
-                const compressionNote = {
-                    role: "system",
-                    content: `📎 [ملخص مضغوط لرسائل سابقة من هذا العميل]: ${oldUserMsgs.slice(-MAX_COMPRESSED_SUMMARY).join(' | ')}`
-                };
-                conversationHistory.set(userHistoryKey, [compressionNote, ...recentMessages]);
-            } else {
-                conversationHistory.set(userHistoryKey, recentMessages);
-            }
-        } else {
-            conversationHistory.set(userHistoryKey, currentHistory);
-        }
+    if (oldUserMsgs.length > 0) {
+        const compressionNote = {
+            role: "system",
+            content: `📎 [ملخص مضغوط لرسائل سابقة من هذا العميل]: ${oldUserMsgs.slice(-MAX_COMPRESSED_SUMMARY).join(' | ')}`
+        };
+        conversationHistory.set(userHistoryKey, [compressionNote, ...recentMessages]);
+    } else {
+        conversationHistory.set(userHistoryKey, recentMessages);
+    }
+} else {
+    conversationHistory.set(userHistoryKey, currentHistory);
+}
 
-        // --- LOG CONVERSATION (Feature #62) ---
-        logConversation(message.author.id, message.channel.name || 'DM', 'user', cleanContent);
-        logConversation(message.author.id, message.channel.name || 'DM', 'assistant', text);
+// --- LOG CONVERSATION (Feature #62) ---
+logConversation(message.author.id, message.channel.name || 'DM', 'user', cleanContent);
+logConversation(message.author.id, message.channel.name || 'DM', 'assistant', text);
 
-        // --- UPDATE KNOWLEDGE BASE (Feature #130) ---
-        const category = isTicket ? 'تذكرة' : (isDM ? 'خاص' : 'عام');
-        updateKnowledge(cleanContent, text, category);
+// --- UPDATE KNOWLEDGE BASE (Feature #130) ---
+const category = isTicket ? 'تذكرة' : (isDM ? 'خاص' : 'عام');
+updateKnowledge(cleanContent, text, category);
 
-        logToWebhook(message.author, cleanContent + (hasImage ? " [📸 Image]" : ""), text);
+logToWebhook(message.author, cleanContent + (hasImage ? " [📸 Image]" : ""), text);
 
     } catch (error) {
-        console.error("❌ Error:", error.message);
+    console.error("❌ Error:", error.message);
 
-        if (error.message.includes("429")) {
-            await message.reply(`⏳ ضغط عالي. جرب بعد دقيقة.`);
-        } else {
-            // Friendly Maintenance Error (Hide Technical Details)
-            // await message.reply(`🛠️ **أنا في وضع الصيانة حالياً لتحديث السيرفرات.**\nأرجو الانتظار قليلاً أو فتح تذكرة للدعم الفني.`);
-            console.error("Bot Error (Hidden form User):", error.message);
-        }
+    if (error.message.includes("429")) {
+        await message.reply(`⏳ ضغط عالي. جرب بعد دقيقة.`);
+    } else {
+        // Friendly Maintenance Error (Hide Technical Details)
+        // await message.reply(`🛠️ **أنا في وضع الصيانة حالياً لتحديث السيرفرات.**\nأرجو الانتظار قليلاً أو فتح تذكرة للدعم الفني.`);
+        console.error("Bot Error (Hidden form User):", error.message);
     }
+}
 });
 
 
