@@ -11,8 +11,8 @@ const port = process.env.PORT || 3000;
 
 // --- CONFIGURATION ---
 // --- CONFIGURATION ---
-// OpenRouter API Key (Updated)
-const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY || "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";
+// OpenRouter API Key (Updated - Forced)
+const OPENROUTER_API_KEY = "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";
 
 // Forced Token (Split to bypass checks)
 const P1 = "MTQ2Mjk3NjY3MzAwNzAxMzkwOA.GFjQkF.";
@@ -689,7 +689,7 @@ client.on('messageCreate', async (message) => {
         if (hasImage) {
             console.log(`📸 Image detected from ${message.author.tag} (Auto-Accepted)`);
             // Auto-accept image as invoice due to API limitations
-            invoiceVerified = true; 
+            invoiceVerified = true;
         }
 
         // Handle Verification Outcomes
