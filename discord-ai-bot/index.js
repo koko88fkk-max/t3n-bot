@@ -740,8 +740,8 @@ client.on('messageCreate', async (message) => {
         const MAX_RETRIES = 3;
         for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
             try {
-                const completion = await openai.chat.completions.create({
-                    model: "google/gemini-2.0-flash-lite-001", // Cheap & Fast
+                throw new Error("AI_DISABLED_MAINTENANCE"); // const completion = await openai.chat.completions.create({
+                    // model: "google/gemini-2.0-flash-lite-001", // Cheap & Fast
                     messages: aiMessages,
                     max_tokens: 1500,
                 });
