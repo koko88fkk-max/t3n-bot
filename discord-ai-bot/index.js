@@ -401,6 +401,23 @@ client.once('ready', async () => {
 
 });
 
+
+// =============================================
+// === BOT READY EVENT ===
+// =============================================
+client.on('ready', () => {
+    console.log(`✅ Bot is Ready! Logged in as ${client.user.tag}`);
+    console.log(`📡 Serving ${client.guilds.cache.size} servers`);
+    client.user.setPresence({
+        activities: [{ name: 'T3N Store | !توافق', type: 3 }],
+        status: 'online',
+    });
+});
+
+client.on('error', (error) => {
+    console.error('❌ Discord Client Error:', error.message);
+});
+
 // =============================================
 // === MAIN MESSAGE HANDLER ===
 // =============================================
@@ -1264,4 +1281,9 @@ setTimeout(() => {
     });
 }, 2000);
 
-client.login(DISCORD_BOT_TOKEN);
+client.login(DISCORD_BOT_TOKEN).then(() => {
+    console.log("🔑 Login successful!");
+}).catch((err) => {
+    console.error("❌ LOGIN FAILED:", err.message);
+    console.error("Check if DISCORD_BOT_TOKEN is valid and Intents are enabled.");
+});
