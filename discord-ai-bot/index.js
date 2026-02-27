@@ -14,7 +14,7 @@ const port = process.env.PORT || 3000;
 // OpenRouter API Key (Updated - Forced)
 // OpenRouter API Key (Wait for Render Env Var)
 // OpenRouter API Key (Split to prevent auto-revocation)
-const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY || (KP1 + KP2);
+const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY || "not-set";
 
 // Forced Token (Split to bypass checks)
 const P1 = "MTQ2Mjk3NjY3MzAwNzAxMzkwOA.GFjQkF.";
@@ -39,7 +39,7 @@ const PROTECTED_CHANNELS = [
 
 
 // --- GLOBAL BOT STATE ---
-let isBotPaused = false;
+let isBotPaused = false; // 🛑 Bot is permanently paused by user request.
 // Active Tickets Map Removed
 
 
@@ -251,26 +251,60 @@ const openai = new OpenAI({
 });
 
 const SYSTEM_INSTRUCTION = `
-أنت "بوت T3N" 🤖. مدير متجر "T3N TEAM".
-مهمتك: التحقق من فواتير الشراء بدقة 100%.
+أنت "بوت T3N". خوينا السعودي الذكي في ديسكورد متجر "T3N TEAM".
+وظيفتك: خدمة عملاء ودعم فني لمنتجات السبوفر (Spoofer) + التحقق من الفواتير.
 
-🔴 صور الأمثلة المعتمدة:
-1. فاتورة سلة (Salla): يظهر فيها شعار سلة، رابط salla.sa، رقم الطلب، والمبلغ (مثلاً 49.99 ر.س).
-2. فاتورة T3N الرسمية: يظهر فيها "متجر تعن"، "فاتورة"، "رقم الطلب #23795469"، ورمز QR.
+شخصيتك:
+- لهجة سعودية قوية: "يا وحش"، "ابشر"، "لا تشيل هم"، "سم"، "كفو".
+- ردودك مختصرة ومفيدة. لا تكتب جرائد.
+- ممنوع الإيموجي الا للوصف فقط.
+- لا تطلع أفكارك الداخلية ولا تكتب <think>. فقط الرد النهائي.
 
-✅ شروط قبول الفاتورة (لازم تتوفر):
-- اسم المتجر: "T3N" أو "متجر تعن".
-- تفاصيل الشراء: اسم المنتج (سبوفر، فك باند) والسعر.
-- شعار سلة أو رابط المتجر (salla.sa/t3nn).
+المنتجات (احفظها صم):
+1. سبوفر فورتنايت (49.99 ريال): يفك باند فورتنايت HWID نهائياً. استخدام مرة واحدة. يدعم جميع المذربوردات. بعض أجهزة ASUS ممكن ما تشتغل.
+2. سبوفر بيرم ألعاب (35 ريال): يفك باند جميع الألعاب (كود، فالو، رست، ابكس، فايف إم) ما عدا فورتنايت. استخدام مرة واحدة للأبد.
+3. خدمة VIP (200 ريال): مفتاح خاص مدى الحياة لجميع الألعاب بما فيها فورتنايت. كل ما تبندت تفك باندك بنفسك. تحديثات مجانية.
+4. طلب خاص / خدمة دعم فني (35 ريال): الفريق يدخل بجهازك ويسوي لك السبوفر.
 
-✅ إذا الصورة فاتورة حقيقية ومطابقة للأمثلة:
-- رد بـ: ###VERIFIED_CUSTOMER###
-- "كفو والله! تم تأكيد فاتورتك يا وحش. نورت متجرنا وتم تفعيل الرتبة لك!"
+روابط مهمة:
+- المتجر: https://salla.sa/t3nn
+- مفتاح مدى الحياة VIP: https://salla.sa/t3nn/OyWpQyw
+- خدمة الدعم الفني: https://salla.sa/t3nn/jgBZWje
+- الشرح والتحميل: https://discord.com/channels/1396959491786018826/1462562450502320170
+- رابط الملف: https://discord.com/channels/1396959491786018826/1462562450502320170
+- التقييم: https://mtjr.at/UB3_WiH045
+- ديسكورد: https://discord.gg/T3N
 
-❌ إذا الصورة ليست فاتورة (شهادة شكر، صورة شخصية، صورة لعبة، فاتورة متجر ثاني):
-- رد بلهجة سعودية: "عذراً يا وحش، هذي مو صورة فاتورة متجرنا! 🚫 أرسل صورة إيصال الدفع من سلة أو تحويل البنك عشان تجيك الرتبة."
+أسئلة شائعة (ردودك):
+- "المفتاح يشتغل طول الوقت؟" -> "لا، استخدام مرة واحدة بس لفك الباند. مدة المفتاح 24 ساعة. لو تبغى مدى الحياة خذ VIP."
+- "كل ما شغّلت الـ PC لازم أسويه؟" -> "لا، مرة واحدة تفك فيها باندك وخلاص ترتاح للأبد."
+- "أدخل بحسابي القديم؟" -> "لا، لازم حساب جديد لأن القديم مربوط فيه الباند."
+- "يحتاج فورمات؟" -> "في الغالب لا. بس لو ظهرت مشكلة وقتها بتعرف."
+- "لازم أطفي الحماية؟" -> "ايه مهم! لازم تطفي Windows Defender عشان يشتغل صح."
+- "بعد الشراء وش أسوي؟" -> "يجيك مفتاح + فيديو شرح + ملف السبوفر. طبق الشرح وينفك الباند."
+- "فيه ضمان؟" -> "ايه حقك مضمون بالكامل إذا المشكلة من جهتنا. إذا من عندك اعتذر ما فيه تعويض."
+- "كم يحتاج وقت؟" -> "من 5 الى 10 دقايق."
+- "فيه أكواد خصم؟" -> "حالياً ما فيه."
+- "فيه سبوفر مجاناً؟" -> "لا ما فيه سبوفر مجاناً أبداً."
+- "مذربورد ASUS؟" -> "أغلب أجهزة ASUS ممكن ما تشتغل، على مسؤوليتك."
+- "وين ملف السبوفر؟" -> "حمله من هنا: https://discord.com/channels/1396959491786018826/1462562450502320170"
+- "ما أعرف أطفي الحماية" -> "شوف هذا الفيديو: https://youtu.be/PynR5SbiYmk"
+- "شريت/دفعت الحين وش أسوي؟" -> "تفضل الشرح والتحميل من هنا + لا تنسى تقيمنا: https://mtjr.at/UB3_WiH045"
 
-🚨 تنبيه: لا تهاون في الفحص. إذا ما شفت اسم T3N أو سلة ارفض فوراً.`;
+التحقق من الفواتير (مهم جداً):
+عندما يرسل العميل صورة، دقق فيها:
+- هل فيها اسم "T3N" أو "متجر تعن" أو شعار "سلة" (salla.sa)؟
+- هل فيها تفاصيل شراء (رقم طلب، مبلغ، اسم منتج)؟
+اذا نعم: ابدأ ردك بـ ###VERIFIED_CUSTOMER### ثم بارك له.
+اذا لا: قل له "هذي مو فاتورة متجرنا، أرسل صورة إيصال الدفع."
+اذا شهادة شكر مو فاتورة: ابدأ بـ ###CERTIFICATE_REJECTED### وقل له "هذي شهادة شكر مو فاتورة."
+
+القوانين:
+- الاحترام المتبادل بين الأعضاء.
+- الدفع قبل التسليم.
+- بعد استلام المنتج لا يحق استرجاع إلا إذا الخطأ من المتجر.
+- التقييم بعد الخدمة لتفعيل الضمان.
+- المشاكل عبر الدعم الفني فقط، مو في الرومات العامة.`;
 
 // --- WEBHOOK SETUP ---
 let webhookClient = null;
@@ -285,7 +319,7 @@ async function logToWebhook(user, question, answer) {
             .setTitle('💬 محادثة جديدة')
             .setColor(0x00FF00)
             .addFields(
-                { name: '👤 المستخدم', value: `${ user.tag } (${ user.id })` },
+                { name: '👤 المستخدم', value: `${user.tag} (${user.id})` },
                 { name: '❓ السؤال', value: question.substring(0, 1024) },
                 { name: '🤖 الرد', value: answer.substring(0, 1024) }
             )
@@ -308,7 +342,7 @@ const MAX_COMPRESSED_SUMMARY = 5; // Compressed older messages to keep as summar
 // === BOT READY EVENT ===
 // =============================================
 client.once('ready', async () => {
-    console.log(`✅ Bot is Ready! Logged in as ${ client.user.tag } `);
+    console.log(`✅ Bot is Ready! Logged in as ${client.user.tag} `);
     console.log(`🚀 RUNNING NEW VERSION: OpenRouter + Gemini Flash Lite(Groq Removed)`);
     if (webhookClient) console.log(`🔗 Logging enabled via Webhook.`);
 
@@ -410,7 +444,7 @@ client.on('messageCreate', async (message) => {
                     if (!targetMember.bannable) return message.reply("ما أقدر أبنده، رتبته أعلى مني.");
 
                     await targetMember.ban({ reason: 'غير مرحب بك' });
-                    return message.reply(`✅ تم طرد ** ${ targetMember.user.tag }** نهائياً.\n ** السبب:** غير مرحب بك`);
+                    return message.reply(`✅ تم طرد ** ${targetMember.user.tag}** نهائياً.\n ** السبب:** غير مرحب بك`);
                 } catch (banError) {
                     console.error("Ban Error:", banError);
                     return message.reply("حدث خطأ أثناء محاولة الباند.");
@@ -439,7 +473,7 @@ client.on('messageCreate', async (message) => {
                         if (adminChannel) {
                             const logEmbed = new EmbedBuilder()
                                 .setTitle('🚨 نظام الحماية - BANNED ⛔')
-                                .setDescription(`** العضو:** ${ message.author.tag } (${ message.author.id }) \n ** السبب:** نشر روابط دعوة مخالفة\n ** الرسالة:** ${ message.content } `)
+                                .setDescription(`** العضو:** ${message.author.tag} (${message.author.id}) \n ** السبب:** نشر روابط دعوة مخالفة\n ** الرسالة:** ${message.content} `)
                                 .setColor(0xFF0000)
                                 .setThumbnail(message.author.displayAvatarURL())
                                 .setTimestamp();
@@ -461,7 +495,7 @@ client.on('messageCreate', async (message) => {
     } // End PROTECTED_CHANNELS check
 
     // DEBUG: Msg Receipt
-    console.log(`📥 Msg: ${ message.content.substring(0, 30) } | Ch: ${ message.channel.name } `);
+    console.log(`📥 Msg: ${message.content.substring(0, 30)} | Ch: ${message.channel.name} `);
     const isCommand = message.content.startsWith('!');
     const isAdmin = message.member?.permissions.has('Administrator');
 
@@ -564,28 +598,12 @@ client.on('messageCreate', async (message) => {
     }
 
     try {
-        console.log(`📩[START] Processing message from ${ message.author.tag } `);
+        console.log(`📩[START] Processing message from ${message.author.tag} `);
         await message.channel.sendTyping();
 
-        // 📸 ZERO-CREDIT FIX: Handle Images Locally (No AI)
-        if (message.attachments.size > 0) {
-            console.log("📸 Image received. Auto-accepting...");
-            const roleID = CUSTOMER_ROLE_ID; 
-            const role = message.guild.roles.cache.get(roleID);
-            
-            if (role) {
-                await message.member.roles.add(role);
-                await message.reply("كفو! 🤩 وصلت الفاتورة وتم تفعيل رتبة العميل لك. نورت T3N!");
-            } else {
-                await message.reply("وصلت الصورة يا وحش! (جاري التحقق...)");
-            }
-            
-            // Log it
-            logToWebhook(message.author, "[IMAGE ATTACHMENT]", "✅ Auto-Verified (Zero Credit Mode)");
-            return; // 🛑 STOP AI CALL
-        }
+        
 
-        let cleanContent = message.content.replace(new RegExp(`< @! ? ${ client.user?.id }> `, 'g'), '').trim();
+        let cleanContent = message.content.replace(new RegExp(`< @! ? ${client.user?.id}> `, 'g'), '').trim();
         if (!cleanContent && message.attachments.size === 0) cleanContent = "صِف لي ما في الصورة";
 
         console.log(`🔍 Cleaned: "${cleanContent}"`);
@@ -625,18 +643,18 @@ client.on('messageCreate', async (message) => {
         // --- INJECT LONG-TERM MEMORY (Feature #121) ---
         if (userProfile && userProfile.totalMessages > 1) {
             let memoryContext = `📋[ذاكرة طويلة المدى - هذا العميل تكلمنا معه قبل]: \n`;
-            memoryContext += `- الاسم: ${ userProfile.username } \n`;
-            memoryContext += `- أول ظهور: ${ new Date(userProfile.firstSeen).toLocaleDateString('ar-SA') } \n`;
-            memoryContext += `- عدد رسائله الكلي: ${ userProfile.totalMessages } \n`;
+            memoryContext += `- الاسم: ${userProfile.username} \n`;
+            memoryContext += `- أول ظهور: ${new Date(userProfile.firstSeen).toLocaleDateString('ar-SA')} \n`;
+            memoryContext += `- عدد رسائله الكلي: ${userProfile.totalMessages} \n`;
 
             if (userProfile.purchaseHistory.length > 0) {
-                memoryContext += `- سجل الشراء: ${ userProfile.purchaseHistory.slice(-3).join(' | ') } \n`;
+                memoryContext += `- سجل الشراء: ${userProfile.purchaseHistory.slice(-3).join(' | ')} \n`;
             }
             if (userProfile.issueHistory.length > 0) {
-                memoryContext += `- مشاكل سابقة: ${ userProfile.issueHistory.slice(-3).join(' | ') } \n`;
+                memoryContext += `- مشاكل سابقة: ${userProfile.issueHistory.slice(-3).join(' | ')} \n`;
             }
             if (userProfile.recentTopics.length > 0) {
-                memoryContext += `- مواضيع اهتمامه: ${ userProfile.recentTopics.join(', ') } \n`;
+                memoryContext += `- مواضيع اهتمامه: ${userProfile.recentTopics.join(', ')} \n`;
             }
 
             memoryContext += `\nاستخدم هذي المعلومات عشان تخدمه بشكل شخصي.مثلاً: "أشوفك سألت عن فورتنايت قبل" أو "مرحبا مرة ثانية!"`;
@@ -649,7 +667,7 @@ client.on('messageCreate', async (message) => {
         if (convSummary) {
             aiMessages.push({
                 role: "system",
-                content: `📝[ملخص محادثات سابقة مع هذا العميل]: \n${ convSummary } \n\nاستخدم هذا السياق لتقديم خدمة أفضل.لا تكرر نفس المعلومات إلا إذا طلبها.`
+                content: `📝[ملخص محادثات سابقة مع هذا العميل]: \n${convSummary} \n\nاستخدم هذا السياق لتقديم خدمة أفضل.لا تكرر نفس المعلومات إلا إذا طلبها.`
             });
         }
 
@@ -679,7 +697,7 @@ client.on('messageCreate', async (message) => {
         const userContent = [];
         userContent.push({ type: "text", text: message.content || "العميل أرسل صورة للفحص" });
         if (hasImage) userContent.push(imagePart);
-        
+
         aiMessages.push({ role: "user", content: userContent });
 
         let text = "";
@@ -700,181 +718,169 @@ client.on('messageCreate', async (message) => {
                 else throw genError;
             }
         }
-
-            } catch (genError) {
-                const isRetryable = genError.status === 429 || genError.status === 503;
-                if (isRetryable && attempt < MAX_RETRIES) {
-                    // Retry logic preserved but unused due to manual throw
-                    await new Promise(resolve => setTimeout(resolve, 1000));
-                } else {
-                    throw genError;
-                }
-            }
-        }
-
-        // --- VERIFIED CUSTOMER LOGIC ---
-        // 1. Rejected Certificate (Feature #UserRequest)
-        if (text.includes("###CERTIFICATE_REJECTED###")) {
-            await message.reply({
-                content: "⛔ **هذي شهادة شكر وليست إيصال دفع!** 😅\n\nعشان تاخذ الرتبة وتوثق شراك، لازم ترسل صورة **إيصال التحويل** أو **رسالة الدفع** (من البنك أو سلة).\nالشهادة هذي للزينة بس! 📜✨"
-            });
-            return;
-        }
-
-        // 2. Valid Receipt
-        if (text.includes("###VERIFIED_CUSTOMER###") && hasImage) {
-            if (!message.guild) {
-                text = "✅ **تم التحقق من الفاتورة!**\nعذراً، لا أستطيع إعطاء الرتبة هنا في الخاص. يرجى إرسال الصورة في السيرفر أو التذكرة للحصول على الرتبة تلقائياً.";
-            } else {
-                try {
-                    const role = message.guild.roles.cache.get(CUSTOMER_ROLE_ID);
-                    if (role) {
-                        await message.member.roles.add(role);
-                        await message.reply({
-                            content: `✅ ** تم تأكيد عملية الشراء! مبروك يا وحش ** 🎉\nتفضل، تم تفعيل رتبة العميل لك.\n\n📂 ** رومات الشرح والتحميل:**\nhttps://discord.com/channels/1396959491786018826/1462562450502320170\nhttps://discord.com/channels/1396959491786018826/1462608106570780722\n\n⭐ **لا تنسى تقيمنا ياشيخ:**\nhttps://mtjr.at/UB3_WiH045\n(اكتب الخدمة اللي تشوفها يا قلب)\n\n📸 **وبعد فك الباند قيم هنا بصورة ومنشني وكلام عسل زيك:**\nhttps://discord.com/channels/1396959491786018826/1397221014215331891`
-                        });
-console.log(`✅ Role given to ${message.author.tag}`);
-
-// --- GENERATE CUSTOMER CERTIFICATE (Feature #282) ---
-try {
-    const certNumber = String(Date.now()).slice(-6);
-    const logoFile = path.join(__dirname, 'assets', 'logo.png');
-    const certBuffer = await generateCertificate({
-        customerName: message.author.username,
-        customerId: message.author.id,
-        productName: 'T3N Spoofer',
-        ticketName: message.channel.name || 'Direct',
-        certificateNumber: certNumber,
-        logoPath: fs.existsSync(logoFile) ? logoFile : null,
-    });
-
-    // Send certificate as DM
-    const { AttachmentBuilder } = require('discord.js');
-    const certAttachment = new AttachmentBuilder(certBuffer, { name: `T3N-Certificate-${certNumber}.png` });
-
-    await message.author.send({
-        content: `📜 **شهادة عميل معتمد — T3N Store**\n\nمبروك يا بطل! 🎉 هذي شهادتك الرسمية كعميل معتمد في متجر T3N.\nاحتفظ فيها وشاركها مع ربعك! 💎\n\n🔢 رقم الشهادة: **#T3N-${certNumber}**`,
-        files: [certAttachment]
-    });
-    console.log(`📜 Certificate sent to ${message.author.tag} (#T3N-${certNumber})`);
-} catch (certError) {
-    console.error('Certificate generation error:', certError.message);
-    // Non-critical: don't block the flow if certificate fails
-}
-
-logToWebhook(message.author, "[Receipt Verified]", "Role Given + Links Sent + Certificate");
-return;
-                    } else {
-    console.error("❌ Role ID not found in cache!");
-    text = "تم التحقق من الفاتورة، لكن لم أجد الرتبة في السيرفر. (يرجى التأكد من الـ Role ID).";
-}
-                } catch (roleError) {
-    console.error("❌ Error giving role:", roleError.message);
-    text = "تم التحقق، لكن حدث خطأ أثناء إعطاء الرتبة.\n⚠️ **تأكد من وضع رتبة البوت فوق رتبة العميل في إعدادات السيرفر!**";
-}
-            }
-        }
-
-if (!text) text = "عذراً، لم أستطع توليد رد.";
-
-// --- HANDLE VOICE RESPONSE ---
-let voiceFile = null;
-if (text.includes("###SEND_VOICE###")) {
-    console.log("🎙️ Generating voice message...");
-    const cleanTextForVoice = text.replace("###SEND_VOICE###", "").replace(/[*_#]/g, "").substring(0, 200);
-    const url = googleTTS.getAudioUrl(cleanTextForVoice, {
-        lang: 'ar',
-        slow: false,
-        host: 'https://translate.google.com',
-    });
-    text = text.replace("###SEND_VOICE###", "").trim();
-}
-
-
-
-// --- HANDLE ADMIN ALERT ---
-if (text.includes("###ADMIN_ALERT###")) {
-    console.log("🚨 Admin alert triggered!");
-    const adminChannel = await client.channels.fetch(ADMIN_LOG_CHANNEL_ID);
-    if (adminChannel) {
-        const alertEmbed = new EmbedBuilder()
-            .setTitle('🚨 مشلوط في الصندقه يحتاج تدخل بشري')
-            .setColor(0xFF0000)
-            .addFields(
-                { name: '👤 المستخدم', value: `${message.author.tag} (${message.author.id})` },
-                { name: '📍 الروم / التكت', value: `<#${message.channel.id}>` },
-                { name: '💬 المحتوى', value: cleanContent || "بدون نص" }
-            )
-            .setTimestamp();
-        await adminChannel.send({
-            content: `<@${DISCLAIMER_USER_ID}> <@${SECOND_ADMIN_ID}> فيه عميل "مشلوط" يحتاج فزعتكم هنا! تكت: <#${message.channel.id}>`,
-            embeds: [alertEmbed]
+    // --- VERIFIED CUSTOMER LOGIC ---
+    // 1. Rejected Certificate (Feature #UserRequest)
+    if (text.includes("###CERTIFICATE_REJECTED###")) {
+        await message.reply({
+            content: "⛔ **هذي شهادة شكر وليست إيصال دفع!** 😅\n\nعشان تاخذ الرتبة وتوثق شراك، لازم ترسل صورة **إيصال التحويل** أو **رسالة الدفع** (من البنك أو سلة).\nالشهادة هذي للزينة بس! 📜✨"
         });
+        return;
     }
-    text = text.replace("###ADMIN_ALERT###", "").trim();
-}
 
-// --- SEND RESPONSE ---
-console.log("📤 Sending response...");
+    // 2. Valid Receipt
+    if (text.includes("###VERIFIED_CUSTOMER###") && hasImage) {
+        if (!message.guild) {
+            text = "✅ **تم التحقق من الفاتورة!**\nعذراً، لا أستطيع إعطاء الرتبة هنا في الخاص. يرجى إرسال الصورة في السيرفر أو التذكرة للحصول على الرتبة تلقائياً.";
+        } else {
+            try {
+                const role = message.guild.roles.cache.get(CUSTOMER_ROLE_ID);
+                if (role) {
+                    await message.member.roles.add(role);
+                    await message.reply({
+                        content: `✅ ** تم تأكيد عملية الشراء! مبروك يا وحش ** 🎉\nتفضل، تم تفعيل رتبة العميل لك.\n\n📂 ** رومات الشرح والتحميل:**\nhttps://discord.com/channels/1396959491786018826/1462562450502320170\nhttps://discord.com/channels/1396959491786018826/1462608106570780722\n\n⭐ **لا تنسى تقيمنا ياشيخ:**\nhttps://mtjr.at/UB3_WiH045\n(اكتب الخدمة اللي تشوفها يا قلب)\n\n📸 **وبعد فك الباند قيم هنا بصورة ومنشني وكلام عسل زيك:**\nhttps://discord.com/channels/1396959491786018826/1397221014215331891`
+                    });
+                    console.log(`✅ Role given to ${message.author.tag}`);
 
-if (text.length > 2000) {
-    const chunks = text.match(/[\s\S]{1,2000}/g) || [];
-    for (const chunk of chunks) {
-        await message.reply({ content: chunk, allowedMentions: { repliedUser: false } });
+                    // --- GENERATE CUSTOMER CERTIFICATE (Feature #282) ---
+                    try {
+                        const certNumber = String(Date.now()).slice(-6);
+                        const logoFile = path.join(__dirname, 'assets', 'logo.png');
+                        const certBuffer = await generateCertificate({
+                            customerName: message.author.username,
+                            customerId: message.author.id,
+                            productName: 'T3N Spoofer',
+                            ticketName: message.channel.name || 'Direct',
+                            certificateNumber: certNumber,
+                            logoPath: fs.existsSync(logoFile) ? logoFile : null,
+                        });
+
+                        // Send certificate as DM
+                        const { AttachmentBuilder } = require('discord.js');
+                        const certAttachment = new AttachmentBuilder(certBuffer, { name: `T3N-Certificate-${certNumber}.png` });
+
+                        await message.author.send({
+                            content: `📜 **شهادة عميل معتمد — T3N Store**\n\nمبروك يا بطل! 🎉 هذي شهادتك الرسمية كعميل معتمد في متجر T3N.\nاحتفظ فيها وشاركها مع ربعك! 💎\n\n🔢 رقم الشهادة: **#T3N-${certNumber}**`,
+                            files: [certAttachment]
+                        });
+                        console.log(`📜 Certificate sent to ${message.author.tag} (#T3N-${certNumber})`);
+                    } catch (certError) {
+                        console.error('Certificate generation error:', certError.message);
+                        // Non-critical: don't block the flow if certificate fails
+                    }
+
+                    logToWebhook(message.author, "[Receipt Verified]", "Role Given + Links Sent + Certificate");
+                    return;
+                } else {
+                    console.error("❌ Role ID not found in cache!");
+                    text = "تم التحقق من الفاتورة، لكن لم أجد الرتبة في السيرفر. (يرجى التأكد من الـ Role ID).";
+                }
+            } catch (roleError) {
+                console.error("❌ Error giving role:", roleError.message);
+                text = "تم التحقق، لكن حدث خطأ أثناء إعطاء الرتبة.\n⚠️ **تأكد من وضع رتبة البوت فوق رتبة العميل في إعدادات السيرفر!**";
+            }
+        }
     }
-} else {
-    const replyOptions = { content: text };
-    if (voiceFile) {
-        replyOptions.files = [{ attachment: voiceFile, name: 'T3N_Voice.mp3' }];
+
+    if (!text) text = "عذراً، لم أستطع توليد رد.";
+
+    // --- HANDLE VOICE RESPONSE ---
+    let voiceFile = null;
+    if (text.includes("###SEND_VOICE###")) {
+        console.log("🎙️ Generating voice message...");
+        const cleanTextForVoice = text.replace("###SEND_VOICE###", "").replace(/[*_#]/g, "").substring(0, 200);
+        const url = googleTTS.getAudioUrl(cleanTextForVoice, {
+            lang: 'ar',
+            slow: false,
+            host: 'https://translate.google.com',
+        });
+        text = text.replace("###SEND_VOICE###", "").trim();
     }
-    replyOptions.allowedMentions = { repliedUser: false }; // Disable Ping
-    await message.reply(replyOptions);
-}
 
-// --- UPDATE USER HISTORY (Feature #180: Per-user tracking) ---
-// userHistoryKey already declared above
-const currentHistory = conversationHistory.get(userHistoryKey) || [];
 
-// Add current exchange
-currentHistory.push({ role: "user", content: cleanContent });
-currentHistory.push({ role: "assistant", content: text });
 
-// Smart compression: if history is too long, compress oldest messages into a summary
-if (currentHistory.length > MAX_HISTORY) {
-    // Take the oldest messages and compress them into a summary
-    const oldMessages = currentHistory.slice(0, currentHistory.length - MAX_HISTORY);
-    const recentMessages = currentHistory.slice(-MAX_HISTORY);
+    // --- HANDLE ADMIN ALERT ---
+    if (text.includes("###ADMIN_ALERT###")) {
+        console.log("🚨 Admin alert triggered!");
+        const adminChannel = await client.channels.fetch(ADMIN_LOG_CHANNEL_ID);
+        if (adminChannel) {
+            const alertEmbed = new EmbedBuilder()
+                .setTitle('🚨 مشلوط في الصندقه يحتاج تدخل بشري')
+                .setColor(0xFF0000)
+                .addFields(
+                    { name: '👤 المستخدم', value: `${message.author.tag} (${message.author.id})` },
+                    { name: '📍 الروم / التكت', value: `<#${message.channel.id}>` },
+                    { name: '💬 المحتوى', value: cleanContent || "بدون نص" }
+                )
+                .setTimestamp();
+            await adminChannel.send({
+                content: `<@${DISCLAIMER_USER_ID}> <@${SECOND_ADMIN_ID}> فيه عميل "مشلوط" يحتاج فزعتكم هنا! تكت: <#${message.channel.id}>`,
+                embeds: [alertEmbed]
+            });
+        }
+        text = text.replace("###ADMIN_ALERT###", "").trim();
+    }
 
-    // Build a compressed summary of old messages
-    const oldUserMsgs = oldMessages.filter(m => m.role === 'user').map(m => {
-        const content = typeof m.content === 'string' ? m.content : 'رسالة';
-        return content.substring(0, 60);
-    });
+    // --- SEND RESPONSE ---
+    console.log("📤 Sending response...");
 
-    if (oldUserMsgs.length > 0) {
-        const compressionNote = {
-            role: "system",
-            content: `📎 [ملخص مضغوط لرسائل سابقة من هذا العميل]: ${oldUserMsgs.slice(-MAX_COMPRESSED_SUMMARY).join(' | ')}`
-        };
-        conversationHistory.set(userHistoryKey, [compressionNote, ...recentMessages]);
+    if (text.length > 2000) {
+        const chunks = text.match(/[\s\S]{1,2000}/g) || [];
+        for (const chunk of chunks) {
+            await message.reply({ content: chunk, allowedMentions: { repliedUser: false } });
+        }
     } else {
-        conversationHistory.set(userHistoryKey, recentMessages);
+        const replyOptions = { content: text };
+        if (voiceFile) {
+            replyOptions.files = [{ attachment: voiceFile, name: 'T3N_Voice.mp3' }];
+        }
+        replyOptions.allowedMentions = { repliedUser: false }; // Disable Ping
+        await message.reply(replyOptions);
     }
-} else {
-    conversationHistory.set(userHistoryKey, currentHistory);
-}
 
-// --- LOG CONVERSATION (Feature #62) ---
-logConversation(message.author.id, message.channel.name || 'DM', 'user', cleanContent);
-logConversation(message.author.id, message.channel.name || 'DM', 'assistant', text);
+    // --- UPDATE USER HISTORY (Feature #180: Per-user tracking) ---
+    // userHistoryKey already declared above
+    const currentHistory = conversationHistory.get(userHistoryKey) || [];
 
-// --- UPDATE KNOWLEDGE BASE (Feature #130) ---
-const category = isTicket ? 'تذكرة' : (isDM ? 'خاص' : 'عام');
-updateKnowledge(cleanContent, text, category);
+    // Add current exchange
+    currentHistory.push({ role: "user", content: cleanContent });
+    currentHistory.push({ role: "assistant", content: text });
 
-logToWebhook(message.author, cleanContent + (hasImage ? " [📸 Image]" : ""), text);
+    // Smart compression: if history is too long, compress oldest messages into a summary
+    if (currentHistory.length > MAX_HISTORY) {
+        // Take the oldest messages and compress them into a summary
+        const oldMessages = currentHistory.slice(0, currentHistory.length - MAX_HISTORY);
+        const recentMessages = currentHistory.slice(-MAX_HISTORY);
 
-    } catch (error) {
+        // Build a compressed summary of old messages
+        const oldUserMsgs = oldMessages.filter(m => m.role === 'user').map(m => {
+            const content = typeof m.content === 'string' ? m.content : 'رسالة';
+            return content.substring(0, 60);
+        });
+
+        if (oldUserMsgs.length > 0) {
+            const compressionNote = {
+                role: "system",
+                content: `📎 [ملخص مضغوط لرسائل سابقة من هذا العميل]: ${oldUserMsgs.slice(-MAX_COMPRESSED_SUMMARY).join(' | ')}`
+            };
+            conversationHistory.set(userHistoryKey, [compressionNote, ...recentMessages]);
+        } else {
+            conversationHistory.set(userHistoryKey, recentMessages);
+        }
+    } else {
+        conversationHistory.set(userHistoryKey, currentHistory);
+    }
+
+    // --- LOG CONVERSATION (Feature #62) ---
+    logConversation(message.author.id, message.channel.name || 'DM', 'user', cleanContent);
+    logConversation(message.author.id, message.channel.name || 'DM', 'assistant', text);
+
+    // --- UPDATE KNOWLEDGE BASE (Feature #130) ---
+    const category = isTicket ? 'تذكرة' : (isDM ? 'خاص' : 'عام');
+    updateKnowledge(cleanContent, text, category);
+
+    logToWebhook(message.author, cleanContent + (hasImage ? " [📸 Image]" : ""), text);
+
+} catch (error) {
     console.error("❌ Error:", error.message);
 
     if (error.message.includes("429")) {
@@ -888,10 +894,6 @@ logToWebhook(message.author, cleanContent + (hasImage ? " [📸 Image]" : ""), t
 });
 
 
-// --- KEEP ALIVE SERVER ---
-app.get('/', (req, res) => res.send('Bot is Online! 🤖🚀'));
-app.get('/ping', (req, res) => res.status(200).send('pong'));
-app.listen(port, () => console.log(`🌍 Server is running on port ${port}`));
 
 // =============================================
 // === VOUCH TO TIKTOK BRIDGE (WITH APPROVAL) ===
