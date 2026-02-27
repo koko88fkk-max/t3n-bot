@@ -16,10 +16,12 @@ const port = process.env.PORT || 3000;
 // OpenRouter API Key (Split to prevent auto-revocation)
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY || "not-set";
 
-// Forced Token (Split to bypass checks)
-const P1 = "MTQ2Mjk3NjY3MzAwNzAxMzkwOA.GFjQkF.";
-const P2 = "XOqEYTpBh-3atIimKdqtCffKwh9f28ubegL4ns";
-const DISCORD_BOT_TOKEN = P1 + P2;
+// Discord Bot Token (from Render Environment Variable - NEVER hardcode!)
+const DISCORD_BOT_TOKEN = process.env.DISCORD_BOT_TOKEN;
+if (!DISCORD_BOT_TOKEN) {
+    console.error("❌ DISCORD_BOT_TOKEN not set! Add it in Render Environment Variables.");
+    process.exit(1);
+}
 const DISCLAIMER_USER_ID = "1320194211978543114";
 const SECOND_ADMIN_ID = "1315014140804206636";
 const AUTO_REPLY_CHANNEL_ID = "1472351871136956561";
